@@ -56,7 +56,9 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
         onChange={(e) => setText(e.target.value)}
         autoComplete="off"
         spellCheck={false}
-        placeholder={"Cô Bảy chợ Xổm, 2, 1, 3\nAnh Tư, 0, 0, 5\nChị Ba, 1"}
+        placeholder={
+          "Cô Bảy chợ Xổm, 2, 1, 3, tt, giao, gói riêng\nAnh Tư, 0, 0, 5, tt\nChị Ba, 1, , , , giao chiều"
+        }
         className="font-mono text-sm tabular-nums"
       />
 
@@ -73,6 +75,11 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
                     nem {r.order.so_luong_nem}, bì {r.order.so_luong_bi}, chả{" "}
                     {r.order.so_luong_cha}
                   </span>
+                  {r.order.da_thanh_toan && <span className="text-primary"> · TT</span>}
+                  {r.order.da_giao && <span className="text-primary"> · Giao</span>}
+                  {r.order.ghi_chu && (
+                    <span className="text-muted-foreground italic"> · &ldquo;{r.order.ghi_chu}&rdquo;</span>
+                  )}
                 </span>
               </div>
             ) : (

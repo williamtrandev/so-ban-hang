@@ -84,8 +84,8 @@ export default async function NhapDonPage() {
           </CardTitle>
           <CardDescription>
             Từng đơn: gõ + Enter. Dán nhiều dòng: mỗi dòng{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">Tên, nem, bì, chả</code> (bỏ trống
-            = 0), hoặc copy thẳng từ Excel/Sheets (cột Tên · Nem · Bì · Chả).
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">Tên, nem, bì, chả, [tt], [giao], [ghi chú]</code>{" "}
+            (bỏ trống = 0), hoặc copy thẳng từ Excel/Sheets.
           </CardDescription>
         </CardHeader>
         <CardContent>
