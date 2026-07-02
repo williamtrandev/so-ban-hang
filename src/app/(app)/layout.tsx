@@ -12,9 +12,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role")
+    .select("full_name, role, status")
     .eq("id", user.id)
     .single();
+
+  // Chưa được admin duyệt thì chưa cho vào hệ thống.
+  if (profile?.status !== "approved") redirect("/cho-duyet");
 
   return (
     <div className="flex min-h-[100dvh] flex-1 flex-col">

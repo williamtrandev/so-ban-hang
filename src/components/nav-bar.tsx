@@ -21,8 +21,11 @@ const LINKS = [
   { href: "/quyet-toan", label: "Quyết toán" },
 ];
 
+const ADMIN_LINKS = [{ href: "/nguoi-dung", label: "Người dùng" }];
+
 export function NavBar({ fullName, role }: { fullName: string; role: string }) {
   const pathname = usePathname();
+  const links = role === "admin" ? [...LINKS, ...ADMIN_LINKS] : LINKS;
 
   return (
     <header className="sticky top-3 z-40 px-3 md:top-4 md:px-4">
@@ -38,7 +41,7 @@ export function NavBar({ fullName, role }: { fullName: string; role: string }) {
           </Link>
           <span className="hidden h-5 w-px bg-border sm:block" aria-hidden="true" />
           <nav className="flex items-center gap-1">
-            {LINKS.map((link) => {
+            {links.map((link) => {
               const active = pathname?.startsWith(link.href);
               return (
                 <Link
