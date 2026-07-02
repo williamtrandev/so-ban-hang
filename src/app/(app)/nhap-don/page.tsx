@@ -24,17 +24,10 @@ export default async function NhapDonPage() {
   const chuaGiao = orders.filter((o) => !o.da_giao).length;
 
   const stats = [
-    { icon: ReceiptText, label: "Số đơn", value: String(orders.length), order: "sm:order-1" },
-    {
-      icon: Banknote,
-      label: "Dự kiến bán",
-      value: formatVnd(totals.tienBan),
-      highlight: true,
-      order: "order-first sm:order-2",
-      span: "col-span-3 sm:col-span-1",
-    },
-    { icon: Wallet, label: "Chưa thanh toán", value: String(chuaThanhToan), order: "sm:order-3" },
-    { icon: Truck, label: "Chưa giao", value: String(chuaGiao), order: "sm:order-4" },
+    { icon: ReceiptText, label: "Số đơn", value: String(orders.length) },
+    { icon: Banknote, label: "Dự kiến bán", value: formatVnd(totals.tienBan), highlight: true },
+    { icon: Wallet, label: "Chưa thanh toán", value: String(chuaThanhToan) },
+    { icon: Truck, label: "Chưa giao", value: String(chuaGiao) },
   ];
 
   return (
@@ -46,11 +39,11 @@ export default async function NhapDonPage() {
         </p>
       </header>
 
-      <dl className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s, i) => (
           <div
             key={s.label}
-            className={`group flex items-center gap-3 rounded-xl p-4 ring-1 transition-all duration-300 hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 ${s.span ?? ""} ${s.order} ${
+            className={`group flex items-center gap-2.5 rounded-xl p-3.5 ring-1 transition-all duration-300 hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 sm:gap-3 sm:p-4 ${
               s.highlight
                 ? "bg-gradient-to-br from-primary/15 to-primary/5 ring-primary/20 hover:shadow-[0_8px_24px_-12px_color-mix(in_oklch,var(--primary)_45%,transparent)]"
                 : "bg-card ring-foreground/10 hover:shadow-[0_8px_24px_-12px_color-mix(in_oklch,var(--foreground)_25%,transparent)]"
@@ -58,7 +51,7 @@ export default async function NhapDonPage() {
             style={{ animationDelay: `${i * 60}ms`, animationFillMode: "backwards" }}
           >
             <span
-              className={`flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-105 ${
+              className={`flex size-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-105 sm:size-9 ${
                 s.highlight ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
               }`}
             >
@@ -73,7 +66,7 @@ export default async function NhapDonPage() {
                 {s.label}
               </dt>
               <dd
-                className={`truncate text-lg font-semibold tabular-nums sm:text-xl ${
+                className={`text-sm font-semibold tabular-nums sm:text-xl ${
                   s.highlight ? "text-primary" : ""
                 }`}
               >
