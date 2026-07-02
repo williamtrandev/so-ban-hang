@@ -53,7 +53,7 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
           onChange={(e) => setText(e.target.value)}
           autoComplete="off"
           autoFocus
-          placeholder="Cô Bảy chợ Xổm, 2, 1, 3"
+          placeholder="Cô Bảy chợ Xổm, 2, 1, 3, tt, giao, gói riêng"
           className="font-mono tabular-nums"
         />
         <Button type="submit" disabled={!canSubmit}>
@@ -68,11 +68,18 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
             <span className="font-medium text-foreground">{result.order.ten_nguoi_mua}</span> — nem{" "}
             {result.order.so_luong_nem}, bì {result.order.so_luong_bi}, chả{" "}
             {result.order.so_luong_cha}
+            {result.order.da_thanh_toan && <span className="text-primary"> · TT</span>}
+            {result.order.da_giao && <span className="text-primary"> · Giao</span>}
+            {result.order.ghi_chu && (
+              <span className="italic"> · &ldquo;{result.order.ghi_chu}&rdquo;</span>
+            )}
           </span>
         ) : result && !result.ok ? (
           <span className="truncate text-destructive">{result.error}</span>
         ) : (
-          <span className="truncate text-muted-foreground">Cú pháp: Tên, nem, bì, chả</span>
+          <span className="truncate text-muted-foreground">
+            Cú pháp: Tên, nem, bì, chả, [tt], [giao], [ghi chú]
+          </span>
         )}
         {tongTien > 0 && (
           <span className="shrink-0 font-semibold tabular-nums text-primary">
