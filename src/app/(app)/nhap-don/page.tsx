@@ -1,10 +1,11 @@
-import { ReceiptText, Banknote, Wallet, Truck } from "lucide-react";
+import { ReceiptText, Banknote, Wallet, Truck, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPrices, getPendingOrders } from "@/lib/domain/data";
 import { calcTotals, formatVnd } from "@/lib/domain/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PendingOrdersTable } from "./pending-orders-table";
 import { AddOrderBar } from "./add-order-bar";
+import { QuickInputTabs } from "./quick-input-tabs";
 
 export default async function NhapDonPage() {
   const supabase = await createClient();
@@ -74,6 +75,23 @@ export default async function NhapDonPage() {
           </div>
         ))}
       </dl>
+
+      <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="size-4 text-primary" />
+            Nhập nhanh
+          </CardTitle>
+          <CardDescription>
+            Từng đơn: gõ + Enter. Dán nhiều dòng: mỗi dòng{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">Tên, nem, bì, chả</code> (bỏ trống
+            = 0).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <QuickInputTabs prices={prices} />
+        </CardContent>
+      </Card>
 
       <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:200ms] [animation-fill-mode:backwards]">
         <CardHeader>

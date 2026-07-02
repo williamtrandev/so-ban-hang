@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPrices } from "@/lib/domain/data";
+import { parseBulkOrders } from "./parse";
 
 export async function createOrder(_prevState: string | null, formData: FormData): Promise<string | null> {
   const tenNguoiMua = String(formData.get("ten_nguoi_mua") ?? "").trim();
@@ -47,6 +48,58 @@ export async function createOrder(_prevState: string | null, formData: FormData)
     gia_ban_cha_snap: cha.gia_ban,
   });
 
+  if (error) return error.message;
+
+  revalidatePath("/nhap-don");
+  return null;
+}
+
+// Nhập nhiều đơn 1 lượt từ text (mỗi dòng 1 đơn). Xem parse.ts cho format.
+export async function createBulkOrders(
+  _prevState: string | null,
+  formData: FormData,
+): Promise<string | null> {
+  const text = String(formData.get("bulk_text") ?? "");
+  const parsed = parseBulkOrders(text);
+
+  if (parsed.length === 0) return "Chưa có dòng nào để nhập.";
+
+  const firstError = parsed.find((r) => !r.ok);
+  if (firstError && !firstError.ok) {
+    return `Dòng ${firstError.line}: ${firstError.error}`;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return "Phiên đăng nhập hết hạn, đăng nhập lại.";
+
+  const prices = await getCurrentPrices(supabase);
+  const nemBi = prices.nem_bi;
+  const cha = prices.cha;
+  if (!nemBi || !cha) return "Chưa có giá sản phẩm, liên hệ admin.";
+
+  const rows = parsed.map((r) => {
+    // Ép narrow: mọi phần tử ở đây đều ok (đã return ở firstError).
+    const o = (r as Extract<typeof r, { ok: true }>).order;
+    return {
+      seller_id: user.id,
+      ten_nguoi_mua: o.ten_nguoi_mua,
+      so_luong_nem: o.so_luong_nem,
+      so_luong_bi: o.so_luong_bi,
+      so_luong_cha: o.so_luong_cha,
+      ghi_chu: null,
+      da_thanh_toan: false,
+      da_giao: false,
+      gia_goc_nem_bi_snap: nemBi.gia_goc,
+      gia_ban_nem_bi_snap: nemBi.gia_ban,
+      gia_goc_cha_snap: cha.gia_goc,
+      gia_ban_cha_snap: cha.gia_ban,
+    };
+  });
+
+  const { error } = await supabase.from("orders").insert(rows);
   if (error) return error.message;
 
   revalidatePath("/nhap-don");
