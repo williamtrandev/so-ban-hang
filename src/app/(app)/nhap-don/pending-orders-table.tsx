@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ReceiptText, Trash2, Pencil, Search } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { ReceiptText, Trash2, Pencil, Search, Loader2 } from "lucide-react";
 import { deleteOrder } from "./actions";
 import { OrderForm } from "./order-form";
+import { useOrders, TMP_PREFIX } from "./orders-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -66,7 +67,19 @@ function RowActions({
   currentUserId: string;
   onEdit: (order: OrderRow) => void;
 }) {
-  if (order.seller_id !== currentUserId) return null;
+  const { apply } = useOrders();
+  const [pending, startTransition] = useTransition();
+
+  // Đơn tạm (đang lưu) chưa có id thật -> chưa cho sửa/xoá.
+  if (order.seller_id !== currentUserId || order.id.startsWith(TMP_PREFIX)) return null;
+
+  function handleDelete() {
+    startTransition(async () => {
+      apply({ type: "remove", id: order.id });
+      await deleteOrder(order.id);
+    });
+  }
+
   return (
     <div className="flex gap-1">
       <Button
@@ -75,21 +88,22 @@ function RowActions({
         size="icon-sm"
         className="text-muted-foreground hover:text-foreground"
         aria-label="Sửa đơn"
+        disabled={pending}
         onClick={() => onEdit(order)}
       >
         <Pencil />
       </Button>
-      <form action={deleteOrder.bind(null, order.id)}>
-        <Button
-          type="submit"
-          variant="ghost"
-          size="icon-sm"
-          className="text-muted-foreground hover:text-destructive"
-          aria-label="Xoá đơn"
-        >
-          <Trash2 />
-        </Button>
-      </form>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="text-muted-foreground hover:text-destructive"
+        aria-label="Xoá đơn"
+        disabled={pending}
+        onClick={handleDelete}
+      >
+        {pending ? <Loader2 className="animate-spin" /> : <Trash2 />}
+      </Button>
     </div>
   );
 }
@@ -120,15 +134,8 @@ function FilterChip({
   );
 }
 
-export function PendingOrdersTable({
-  orders,
-  currentUserId,
-  prices,
-}: {
-  orders: OrderRow[];
-  currentUserId: string;
-  prices: Record<PriceGroup, Price>;
-}) {
+export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Price> }) {
+  const { orders, currentUserId } = useOrders();
   const [search, setSearch] = useState("");
   const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(new Set());
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
@@ -205,7 +212,10 @@ export function PendingOrdersTable({
             {filteredOrders.map((order, i) => (
               <li
                 key={order.id}
-                className="flex flex-col gap-2.5 rounded-lg border border-border/70 p-3 animate-in fade-in slide-in-from-bottom-1 duration-300"
+                className={cn(
+                  "flex flex-col gap-2.5 rounded-lg border border-border/70 p-3 animate-in fade-in slide-in-from-bottom-1 duration-300",
+                  order.id.startsWith(TMP_PREFIX) && "animate-pulse opacity-60",
+                )}
                 style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -246,7 +256,10 @@ export function PendingOrdersTable({
                 {filteredOrders.map((order, i) => (
                   <TableRow
                     key={order.id}
-                    className="animate-in fade-in slide-in-from-left-1 duration-300"
+                    className={cn(
+                      "animate-in fade-in slide-in-from-left-1 duration-300",
+                      order.id.startsWith(TMP_PREFIX) && "animate-pulse opacity-60",
+                    )}
                     style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
                   >
                     <TableCell className="font-medium">{order.ten_nguoi_mua}</TableCell>

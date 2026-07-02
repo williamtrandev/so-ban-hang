@@ -4,12 +4,30 @@ import { useActionState, useRef, useEffect, useState, useMemo } from "react";
 import { ListPlus, CircleCheck, CircleAlert } from "lucide-react";
 import { createBulkOrders } from "./actions";
 import { parseBulkOrders } from "./parse";
+import { useOrders, toOptimisticOrder } from "./orders-provider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatVnd, type Price, type PriceGroup } from "@/lib/domain/types";
 
 export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
-  const [error, formAction, pending] = useActionState(createBulkOrders, null);
+  const { apply, currentUserId } = useOrders();
+  const [error, formAction, pending] = useActionState(
+    async (prev: string | null, formData: FormData) => {
+      // Dispatch optimistic TRONG transition đang await server.
+      const rows = parseBulkOrders(String(formData.get("bulk_text") ?? ""));
+      const ok = rows.filter((r) => r.ok);
+      if (ok.length > 0 && ok.length === rows.length) {
+        apply({
+          type: "add",
+          orders: ok.map((r) =>
+            toOptimisticOrder((r as Extract<typeof r, { ok: true }>).order, currentUserId, prices),
+          ),
+        });
+      }
+      return createBulkOrders(prev, formData);
+    },
+    null,
+  );
   const [text, setText] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const submittedRef = useRef(false);
@@ -39,7 +57,6 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
     }
     if (submittedRef.current && !error) {
       submittedRef.current = false;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setText("");
       formRef.current?.reset();
     }

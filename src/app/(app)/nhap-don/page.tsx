@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { PendingOrdersTable } from "./pending-orders-table";
 import { AddOrderBar } from "./add-order-bar";
 import { QuickInputTabs } from "./quick-input-tabs";
+import { OrdersProvider } from "./orders-provider";
 
 export default async function NhapDonPage() {
   const supabase = await createClient();
@@ -76,38 +77,40 @@ export default async function NhapDonPage() {
         ))}
       </dl>
 
-      <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="size-4 text-primary" />
-            Nhập nhanh
-          </CardTitle>
-          <CardDescription>
-            Từng đơn: gõ + Enter. Dán nhiều dòng: mỗi dòng{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">Tên, nem, bì, chả, [tt], [giao], [ghi chú]</code>{" "}
-            (bỏ trống = 0), hoặc copy thẳng từ Excel/Sheets.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <QuickInputTabs prices={prices} />
-        </CardContent>
-      </Card>
+      <OrdersProvider orders={orders} currentUserId={user!.id}>
+        <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="size-4 text-primary" />
+              Nhập nhanh
+            </CardTitle>
+            <CardDescription>
+              Từng đơn: gõ + Enter. Dán nhiều dòng: mỗi dòng{" "}
+              <code className="rounded bg-muted px-1 py-0.5 text-xs">Tên, nem, bì, chả, [tt], [giao], [ghi chú]</code>{" "}
+              (bỏ trống = 0), hoặc copy thẳng từ Excel/Sheets.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <QuickInputTabs prices={prices} />
+          </CardContent>
+        </Card>
 
-      <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:200ms] [animation-fill-mode:backwards]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            Đơn chưa quyết toán
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-md bg-accent px-1.5 text-[11px] font-semibold text-accent-foreground tabular-nums">
-              {orders.length}
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PendingOrdersTable orders={orders} currentUserId={user!.id} prices={prices} />
-        </CardContent>
-      </Card>
+        <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:200ms] [animation-fill-mode:backwards]">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Đơn chưa quyết toán
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-md bg-accent px-1.5 text-[11px] font-semibold text-accent-foreground tabular-nums">
+                {orders.length}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PendingOrdersTable prices={prices} />
+          </CardContent>
+        </Card>
 
-      <AddOrderBar prices={prices} />
+        <AddOrderBar prices={prices} />
+      </OrdersProvider>
     </div>
   );
 }

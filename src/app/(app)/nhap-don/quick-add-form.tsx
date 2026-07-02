@@ -4,12 +4,24 @@ import { useActionState, useRef, useEffect, useState, useMemo } from "react";
 import { Zap } from "lucide-react";
 import { createBulkOrders } from "./actions";
 import { parseBulkOrders } from "./parse";
+import { useOrders, toOptimisticOrder } from "./orders-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatVnd, type Price, type PriceGroup } from "@/lib/domain/types";
 
 export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
-  const [error, formAction, pending] = useActionState(createBulkOrders, null);
+  const { apply, currentUserId } = useOrders();
+  const [error, formAction, pending] = useActionState(
+    async (prev: string | null, formData: FormData) => {
+      // Dispatch optimistic TRONG transition đang await server -> đơn giữ hiện tới khi xong.
+      const r = parseBulkOrders(String(formData.get("bulk_text") ?? ""))[0];
+      if (r?.ok) {
+        apply({ type: "add", orders: [toOptimisticOrder(r.order, currentUserId, prices)] });
+      }
+      return createBulkOrders(prev, formData);
+    },
+    null,
+  );
   const [text, setText] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -33,7 +45,6 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
     }
     if (submittedRef.current && !error) {
       submittedRef.current = false;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setText("");
       formRef.current?.reset();
       inputRef.current?.focus();
