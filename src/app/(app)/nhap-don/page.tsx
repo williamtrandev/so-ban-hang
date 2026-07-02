@@ -24,10 +24,17 @@ export default async function NhapDonPage() {
   const chuaGiao = orders.filter((o) => !o.da_giao).length;
 
   const stats = [
-    { icon: ReceiptText, label: "Số đơn", value: String(orders.length) },
-    { icon: Banknote, label: "Dự kiến bán", value: formatVnd(totals.tienBan), highlight: true },
-    { icon: Wallet, label: "Chưa thanh toán", value: String(chuaThanhToan) },
-    { icon: Truck, label: "Chưa giao", value: String(chuaGiao) },
+    { icon: ReceiptText, label: "Số đơn", value: String(orders.length), order: "sm:order-1" },
+    {
+      icon: Banknote,
+      label: "Dự kiến bán",
+      value: formatVnd(totals.tienBan),
+      highlight: true,
+      order: "order-first sm:order-2",
+      span: "col-span-3 sm:col-span-1",
+    },
+    { icon: Wallet, label: "Chưa thanh toán", value: String(chuaThanhToan), order: "sm:order-3" },
+    { icon: Truck, label: "Chưa giao", value: String(chuaGiao), order: "sm:order-4" },
   ];
 
   return (
@@ -39,11 +46,11 @@ export default async function NhapDonPage() {
         </p>
       </header>
 
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <dl className="grid grid-cols-3 gap-3 sm:grid-cols-4">
         {stats.map((s, i) => (
           <div
             key={s.label}
-            className={`group flex items-center gap-3 rounded-xl p-4 ring-1 transition-all duration-300 hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 ${
+            className={`group flex items-center gap-3 rounded-xl p-4 ring-1 transition-all duration-300 hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 ${s.span ?? ""} ${s.order} ${
               s.highlight
                 ? "bg-gradient-to-br from-primary/15 to-primary/5 ring-primary/20 hover:shadow-[0_8px_24px_-12px_color-mix(in_oklch,var(--primary)_45%,transparent)]"
                 : "bg-card ring-foreground/10 hover:shadow-[0_8px_24px_-12px_color-mix(in_oklch,var(--foreground)_25%,transparent)]"
@@ -59,7 +66,7 @@ export default async function NhapDonPage() {
             </span>
             <div className="flex min-w-0 flex-col">
               <dt
-                className={`truncate text-xs ${
+                className={`text-xs leading-tight ${
                   s.highlight ? "font-medium text-primary" : "text-muted-foreground"
                 }`}
               >

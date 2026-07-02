@@ -16,14 +16,17 @@ function initialsOf(fullName: string): string {
   return (first + last).toUpperCase() || "?";
 }
 
-type NavLink = { href: string; label: string; icon: LucideIcon };
+type NavLink = { href: string; label: string; icon: LucideIcon; secondary?: boolean };
 
 const LINKS: NavLink[] = [
   { href: "/nhap-don", label: "Nhập đơn", icon: PencilLine },
   { href: "/quyet-toan", label: "Quyết toán", icon: Wallet },
 ];
 
-const ADMIN_LINKS: NavLink[] = [{ href: "/nguoi-dung", label: "Người dùng", icon: Users }];
+// secondary: label chỉ hiện trên desktop, mobile gọn còn icon để khỏi tràn header.
+const ADMIN_LINKS: NavLink[] = [
+  { href: "/nguoi-dung", label: "Người dùng", icon: Users, secondary: true },
+];
 
 export function NavBar({ fullName, role }: { fullName: string; role: string }) {
   const pathname = usePathname();
@@ -51,9 +54,8 @@ export function NavBar({ fullName, role }: { fullName: string; role: string }) {
                   key={link.href}
                   href={link.href}
                   title={link.label}
-                  aria-label={link.label}
                   className={cn(
-                    "relative flex items-center rounded-full px-2.5 py-1.5 text-sm font-medium whitespace-nowrap transition-colors md:px-3",
+                    "relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors md:px-3 md:text-sm",
                     active ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -64,8 +66,10 @@ export function NavBar({ fullName, role }: { fullName: string; role: string }) {
                       transition={{ type: "spring", stiffness: 400, damping: 32 }}
                     />
                   )}
-                  <Icon className="relative size-4 md:hidden" strokeWidth={1.75} />
-                  <span className="relative hidden md:inline">{link.label}</span>
+                  <Icon className="relative size-4 shrink-0" strokeWidth={1.75} />
+                  <span className={cn("relative", link.secondary && "hidden md:inline")}>
+                    {link.label}
+                  </span>
                 </Link>
               );
             })}
@@ -73,7 +77,7 @@ export function NavBar({ fullName, role }: { fullName: string; role: string }) {
         </div>
         <div className="flex shrink-0 items-center gap-1 md:gap-2">
           <ThemeToggle />
-          <span className="flex items-center gap-2">
+          <span className="hidden items-center gap-2 sm:flex">
             <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground">
               {initialsOf(fullName)}
             </span>
