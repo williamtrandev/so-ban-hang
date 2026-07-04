@@ -4,7 +4,6 @@ import { getCurrentPrices, getPendingOrders } from "@/lib/domain/data";
 import { calcTotals, formatVnd } from "@/lib/domain/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PendingOrdersTable } from "./pending-orders-table";
-import { AddOrderBar } from "./add-order-bar";
 import { QuickInputTabs } from "./quick-input-tabs";
 import { OrdersProvider } from "./orders-provider";
 
@@ -108,8 +107,6 @@ export default async function NhapDonPage() {
             <PendingOrdersTable prices={prices} />
           </CardContent>
         </Card>
-
-        <AddOrderBar prices={prices} />
       </OrdersProvider>
     </div>
   );

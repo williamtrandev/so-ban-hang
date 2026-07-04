@@ -164,7 +164,7 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
       <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/40 p-10 text-center">
         <ReceiptText className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
         <p className="text-sm text-muted-foreground">
-          Chưa có đơn nào trong đợt này. Bấm &quot;Thêm đơn mới&quot; ở dưới để bắt đầu.
+          Chưa có đơn nào trong đợt này. Dùng &quot;Nhập nhanh&quot; ở trên để bắt đầu.
         </p>
       </div>
     );
