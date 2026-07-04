@@ -1,14 +1,16 @@
 // Parser cho tính năng nhập nhanh nhiều đơn dạng text.
-// Mỗi dòng = 1 đơn, format: "Tên người mua, nem, bì, chả[, ...phần thêm]".
-// Cột ngăn bởi dấu phẩy HOẶC tab (paste thẳng từ Excel/Google Sheets).
-// Số lượng theo thứ tự cố định Nem / Bì / Chả, bỏ trống = 0.
-// Sau chả, các trường thừa (thứ tự tự do): token "tt" = đã thanh toán,
-// "giao" = đã giao, phần còn lại gộp thành ghi chú.
+// Mỗi dòng = 1 đơn. Cột ngăn bởi dấu phẩy HOẶC tab (paste thẳng từ Excel/Sheets).
+// Cột đầu = tên người mua. Các cột sau KHÔNG theo thứ tự cố định, mỗi cột là 1 token:
+//   <số><đơn vị> với đơn vị: n = nem ăn liền, nm = nem mới, b = bì, c = chả
+//   token trạng thái: "tt" = đã thanh toán, "giao" = đã giao
+//   còn lại = ghi chú
+// Ví dụ: "Cô Bảy chợ Xổm, 2n, 2nm, 1b, 1c, tt, giao, gói riêng"
 // Dùng chung cho client (preview) và server (validate + insert).
 
 export type ParsedOrder = {
   ten_nguoi_mua: string;
-  so_luong_nem: number;
+  so_luong_nem_an_lien: number;
+  so_luong_nem_moi: number;
   so_luong_bi: number;
   so_luong_cha: number;
   ghi_chu: string | null;
@@ -23,12 +25,15 @@ export type ParseLineResult =
 const PAID_TOKENS = new Set(["tt", "đã tt", "thanh toán", "đã thanh toán", "paid"]);
 const DELIVERED_TOKENS = new Set(["giao", "đã giao", "delivered", "ship"]);
 
-function parseQty(raw: string | undefined): number | null {
-  const s = (raw ?? "").trim();
-  if (s === "") return 0;
-  if (!/^\d+$/.test(s)) return null;
-  return parseInt(s, 10);
-}
+// nm phải đứng trước n trong alternation để "2nm" không bị bắt nhầm thành "2n".
+const QTY_RE = /^(\d+)\s*(nm|n|b|c)$/i;
+
+const QTY_FIELD = {
+  n: "so_luong_nem_an_lien",
+  nm: "so_luong_nem_moi",
+  b: "so_luong_bi",
+  c: "so_luong_cha",
+} as const;
 
 export function parseBulkOrders(text: string): ParseLineResult[] {
   const results: ParseLineResult[] = [];
@@ -46,32 +51,47 @@ export function parseBulkOrders(text: string): ParseLineResult[] {
       return;
     }
 
-    const nem = parseQty(parts[1]);
-    const bi = parseQty(parts[2]);
-    const cha = parseQty(parts[3]);
-
-    if (nem === null || bi === null || cha === null) {
-      results.push({ ok: false, line, raw, error: "Số lượng phải là số nguyên không âm." });
-      return;
-    }
-    if (nem === 0 && bi === 0 && cha === 0) {
-      results.push({ ok: false, line, raw, error: "Cần ít nhất 1 số lượng (nem, bì, hoặc chả)." });
-      return;
-    }
-
-    // Phần sau chả: phân loại token trạng thái, còn lại là ghi chú.
+    const qty = {
+      so_luong_nem_an_lien: 0,
+      so_luong_nem_moi: 0,
+      so_luong_bi: 0,
+      so_luong_cha: 0,
+    };
     let da_thanh_toan = false;
     let da_giao = false;
     const noteParts: string[] = [];
-    for (const part of parts.slice(4)) {
+
+    for (const part of parts.slice(1)) {
       const t = part.trim();
       if (t === "") continue;
       const key = t.toLowerCase();
-      if (PAID_TOKENS.has(key)) da_thanh_toan = true;
-      else if (DELIVERED_TOKENS.has(key)) da_giao = true;
-      else noteParts.push(t);
+      const m = QTY_RE.exec(t);
+      if (m) {
+        const unit = m[2].toLowerCase() as keyof typeof QTY_FIELD;
+        qty[QTY_FIELD[unit]] += parseInt(m[1], 10);
+      } else if (PAID_TOKENS.has(key)) {
+        da_thanh_toan = true;
+      } else if (DELIVERED_TOKENS.has(key)) {
+        da_giao = true;
+      } else {
+        noteParts.push(t);
+      }
     }
-    const ghi_chu = noteParts.length > 0 ? noteParts.join(", ") : null;
+
+    if (
+      qty.so_luong_nem_an_lien === 0 &&
+      qty.so_luong_nem_moi === 0 &&
+      qty.so_luong_bi === 0 &&
+      qty.so_luong_cha === 0
+    ) {
+      results.push({
+        ok: false,
+        line,
+        raw,
+        error: "Cần ít nhất 1 số lượng (vd: 2n, 2nm, 1b, 1c).",
+      });
+      return;
+    }
 
     results.push({
       ok: true,
@@ -79,10 +99,8 @@ export function parseBulkOrders(text: string): ParseLineResult[] {
       raw,
       order: {
         ten_nguoi_mua,
-        so_luong_nem: nem,
-        so_luong_bi: bi,
-        so_luong_cha: cha,
-        ghi_chu,
+        ...qty,
+        ghi_chu: noteParts.length > 0 ? noteParts.join(", ") : null,
         da_thanh_toan,
         da_giao,
       },

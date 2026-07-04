@@ -7,7 +7,8 @@ import { parseBulkOrders } from "./parse";
 
 export async function createOrder(_prevState: string | null, formData: FormData): Promise<string | null> {
   const tenNguoiMua = String(formData.get("ten_nguoi_mua") ?? "").trim();
-  const soLuongNem = Number(formData.get("so_luong_nem") || 0);
+  const soLuongNemAnLien = Number(formData.get("so_luong_nem_an_lien") || 0);
+  const soLuongNemMoi = Number(formData.get("so_luong_nem_moi") || 0);
   const soLuongBi = Number(formData.get("so_luong_bi") || 0);
   const soLuongCha = Number(formData.get("so_luong_cha") || 0);
   const ghiChu = String(formData.get("ghi_chu") ?? "").trim();
@@ -15,10 +16,10 @@ export async function createOrder(_prevState: string | null, formData: FormData)
   const daGiao = formData.get("da_giao") === "on";
 
   if (!tenNguoiMua) return "Nhập tên người mua.";
-  for (const n of [soLuongNem, soLuongBi, soLuongCha]) {
+  for (const n of [soLuongNemAnLien, soLuongNemMoi, soLuongBi, soLuongCha]) {
     if (!Number.isInteger(n) || n < 0) return "Số lượng phải là số nguyên không âm.";
   }
-  if (soLuongNem === 0 && soLuongBi === 0 && soLuongCha === 0) {
+  if (soLuongNemAnLien === 0 && soLuongNemMoi === 0 && soLuongBi === 0 && soLuongCha === 0) {
     return "Nhập ít nhất 1 số lượng (nem, bì, hoặc chả).";
   }
 
@@ -36,7 +37,8 @@ export async function createOrder(_prevState: string | null, formData: FormData)
   const { error } = await supabase.from("orders").insert({
     seller_id: user.id,
     ten_nguoi_mua: tenNguoiMua,
-    so_luong_nem: soLuongNem,
+    so_luong_nem_an_lien: soLuongNemAnLien,
+    so_luong_nem_moi: soLuongNemMoi,
     so_luong_bi: soLuongBi,
     so_luong_cha: soLuongCha,
     ghi_chu: ghiChu || null,
@@ -86,7 +88,8 @@ export async function createBulkOrders(
     return {
       seller_id: user.id,
       ten_nguoi_mua: o.ten_nguoi_mua,
-      so_luong_nem: o.so_luong_nem,
+      so_luong_nem_an_lien: o.so_luong_nem_an_lien,
+      so_luong_nem_moi: o.so_luong_nem_moi,
       so_luong_bi: o.so_luong_bi,
       so_luong_cha: o.so_luong_cha,
       ghi_chu: o.ghi_chu,
@@ -133,7 +136,8 @@ export async function updateOrder(
   formData: FormData,
 ): Promise<string | null> {
   const tenNguoiMua = String(formData.get("ten_nguoi_mua") ?? "").trim();
-  const soLuongNem = Number(formData.get("so_luong_nem") || 0);
+  const soLuongNemAnLien = Number(formData.get("so_luong_nem_an_lien") || 0);
+  const soLuongNemMoi = Number(formData.get("so_luong_nem_moi") || 0);
   const soLuongBi = Number(formData.get("so_luong_bi") || 0);
   const soLuongCha = Number(formData.get("so_luong_cha") || 0);
   const ghiChu = String(formData.get("ghi_chu") ?? "").trim();
@@ -141,10 +145,10 @@ export async function updateOrder(
   const daGiao = formData.get("da_giao") === "on";
 
   if (!tenNguoiMua) return "Nhập tên người mua.";
-  for (const n of [soLuongNem, soLuongBi, soLuongCha]) {
+  for (const n of [soLuongNemAnLien, soLuongNemMoi, soLuongBi, soLuongCha]) {
     if (!Number.isInteger(n) || n < 0) return "Số lượng phải là số nguyên không âm.";
   }
-  if (soLuongNem === 0 && soLuongBi === 0 && soLuongCha === 0) {
+  if (soLuongNemAnLien === 0 && soLuongNemMoi === 0 && soLuongBi === 0 && soLuongCha === 0) {
     return "Nhập ít nhất 1 số lượng (nem, bì, hoặc chả).";
   }
 
@@ -158,7 +162,8 @@ export async function updateOrder(
     .from("orders")
     .update({
       ten_nguoi_mua: tenNguoiMua,
-      so_luong_nem: soLuongNem,
+      so_luong_nem_an_lien: soLuongNemAnLien,
+      so_luong_nem_moi: soLuongNemMoi,
       so_luong_bi: soLuongBi,
       so_luong_cha: soLuongCha,
       ghi_chu: ghiChu || null,

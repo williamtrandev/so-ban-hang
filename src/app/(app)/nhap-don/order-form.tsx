@@ -11,10 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { formatVnd, type OrderRow, type Price, type PriceGroup } from "@/lib/domain/types";
 
-type QtyKey = "nem" | "bi" | "cha";
+type QtyKey = "nem_an_lien" | "nem_moi" | "bi" | "cha";
 
 const QUANTITY_FIELDS: { key: QtyKey; name: string; label: string; group: PriceGroup }[] = [
-  { key: "nem", name: "so_luong_nem", label: "Nem", group: "nem_bi" },
+  { key: "nem_an_lien", name: "so_luong_nem_an_lien", label: "Nem ăn liền", group: "nem_bi" },
+  { key: "nem_moi", name: "so_luong_nem_moi", label: "Nem mới", group: "nem_bi" },
   { key: "bi", name: "so_luong_bi", label: "Bì", group: "nem_bi" },
   { key: "cha", name: "so_luong_cha", label: "Chả", group: "cha" },
 ];
@@ -34,7 +35,8 @@ export function OrderForm({
   const formRef = useRef<HTMLFormElement>(null);
   const submittedRef = useRef(false);
   const [qty, setQty] = useState<Record<QtyKey, number>>({
-    nem: order?.so_luong_nem ?? 0,
+    nem_an_lien: order?.so_luong_nem_an_lien ?? 0,
+    nem_moi: order?.so_luong_nem_moi ?? 0,
     bi: order?.so_luong_bi ?? 0,
     cha: order?.so_luong_cha ?? 0,
   });
@@ -49,7 +51,7 @@ export function OrderForm({
       if (!isEdit) {
         formRef.current?.reset();
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setQty({ nem: 0, bi: 0, cha: 0 });
+        setQty({ nem_an_lien: 0, nem_moi: 0, bi: 0, cha: 0 });
       }
       onSuccess?.();
     }
@@ -66,7 +68,8 @@ export function OrderForm({
   }
 
   const tongTien =
-    (qty.nem + qty.bi) * (prices.nem_bi?.gia_ban ?? 0) + qty.cha * (prices.cha?.gia_ban ?? 0);
+    (qty.nem_an_lien + qty.nem_moi + qty.bi) * (prices.nem_bi?.gia_ban ?? 0) +
+    qty.cha * (prices.cha?.gia_ban ?? 0);
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-5">

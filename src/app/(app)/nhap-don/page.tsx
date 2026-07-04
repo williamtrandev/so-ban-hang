@@ -1,7 +1,7 @@
 import { ReceiptText, Banknote, Wallet, Truck, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPrices, getPendingOrders } from "@/lib/domain/data";
-import { calcTotals, formatVnd } from "@/lib/domain/types";
+import { calcTotals, calcProductTotals, formatVnd } from "@/lib/domain/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PendingOrdersTable } from "./pending-orders-table";
 import { QuickInputTabs } from "./quick-input-tabs";
@@ -19,6 +19,7 @@ export default async function NhapDonPage() {
   ]);
 
   const totals = calcTotals(orders);
+  const productTotals = calcProductTotals(orders);
   const chuaThanhToan = orders.filter((o) => !o.da_thanh_toan).length;
   const chuaGiao = orders.filter((o) => !o.da_giao).length;
 
@@ -76,6 +77,26 @@ export default async function NhapDonPage() {
         ))}
       </dl>
 
+      <div className="flex flex-wrap items-stretch gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10 animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:100ms] [animation-fill-mode:backwards]">
+        <div className="flex min-w-32 flex-col gap-0.5">
+          <span className="text-xs text-muted-foreground">Tổng phần nem</span>
+          <span className="text-xl font-semibold tabular-nums">{productTotals.nemTong}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            ăn liền {productTotals.nemAnLien} · mới {productTotals.nemMoi}
+          </span>
+        </div>
+        <div className="w-px self-stretch bg-border/70" />
+        <div className="flex min-w-20 flex-col gap-0.5">
+          <span className="text-xs text-muted-foreground">Phần bì</span>
+          <span className="text-xl font-semibold tabular-nums">{productTotals.bi}</span>
+        </div>
+        <div className="w-px self-stretch bg-border/70" />
+        <div className="flex min-w-20 flex-col gap-0.5">
+          <span className="text-xs text-muted-foreground">Phần chả</span>
+          <span className="text-xl font-semibold tabular-nums">{productTotals.cha}</span>
+        </div>
+      </div>
+
       <OrdersProvider orders={orders} currentUserId={user!.id}>
         <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
           <CardHeader>
@@ -84,9 +105,9 @@ export default async function NhapDonPage() {
               Nhập nhanh
             </CardTitle>
             <CardDescription>
-              Từng đơn: gõ + Enter. Dán nhiều dòng: mỗi dòng{" "}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">Tên, nem, bì, chả, [tt], [giao], [ghi chú]</code>{" "}
-              (bỏ trống = 0), hoặc copy thẳng từ Excel/Sheets.
+              Mỗi đơn:{" "}
+              <code className="rounded bg-muted px-1 py-0.5 text-xs">Tên, 2n, 2nm, 1b, 1c, [tt], [giao], [ghi chú]</code>{" "}
+              — n=nem ăn liền, nm=nem mới, b=bì, c=chả (thứ tự tự do, bỏ loại nào không có).
             </CardDescription>
           </CardHeader>
           <CardContent>

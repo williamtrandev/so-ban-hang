@@ -7,7 +7,7 @@ import { parseBulkOrders } from "./parse";
 import { useOrders, toOptimisticOrder } from "./orders-provider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { formatVnd, type Price, type PriceGroup } from "@/lib/domain/types";
+import { formatVnd, nemBiChaLabel, type Price, type PriceGroup } from "@/lib/domain/types";
 
 export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
   const { apply, currentUserId } = useOrders();
@@ -43,7 +43,8 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
         const o = r.order;
         return (
           sum +
-          (o.so_luong_nem + o.so_luong_bi) * (prices.nem_bi?.gia_ban ?? 0) +
+          (o.so_luong_nem_an_lien + o.so_luong_nem_moi + o.so_luong_bi) *
+            (prices.nem_bi?.gia_ban ?? 0) +
           o.so_luong_cha * (prices.cha?.gia_ban ?? 0)
         );
       }, 0),
@@ -74,7 +75,7 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
         autoComplete="off"
         spellCheck={false}
         placeholder={
-          "Cô Bảy chợ Xổm, 2, 1, 3, tt, giao, gói riêng\nAnh Tư, 0, 0, 5, tt\nChị Ba, 1, , , , giao chiều"
+          "Cô Bảy chợ Xổm, 2n, 2nm, 1b, 1c, tt, giao, gói riêng\nAnh Tư, 5c, tt\nChị Ba, 1nm, giao chiều"
         }
         className="font-mono text-sm tabular-nums"
       />
@@ -89,8 +90,12 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
                   <span className="font-medium">{r.order.ten_nguoi_mua}</span>
                   <span className="text-muted-foreground">
                     {" — "}
-                    nem {r.order.so_luong_nem}, bì {r.order.so_luong_bi}, chả{" "}
-                    {r.order.so_luong_cha}
+                    {nemBiChaLabel(
+                      r.order.so_luong_nem_an_lien,
+                      r.order.so_luong_nem_moi,
+                      r.order.so_luong_bi,
+                      r.order.so_luong_cha,
+                    )}
                   </span>
                   {r.order.da_thanh_toan && <span className="text-primary"> · TT</span>}
                   {r.order.da_giao && <span className="text-primary"> · Giao</span>}
