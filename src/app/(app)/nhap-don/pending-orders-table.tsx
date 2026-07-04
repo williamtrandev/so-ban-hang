@@ -27,6 +27,7 @@ import {
   formatVnd,
   formatDateTime,
   calcTotals,
+  calcProductTotals,
   orderTienBan,
   soLuongLabel,
   type OrderRow,
@@ -171,6 +172,7 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
   }
 
   const totals = calcTotals(orders);
+  const productTotals = calcProductTotals(orders);
 
   return (
     <div className="flex flex-col gap-3">
@@ -292,10 +294,27 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
         </>
       )}
 
-      <p className="text-right text-sm text-muted-foreground">
-        Tổng {totals.soLuongTong} phần · dự kiến bán{" "}
-        <span className="font-medium text-foreground tabular-nums">{formatVnd(totals.tienBan)}</span>
-      </p>
+      <div className="flex flex-col gap-2 border-t border-border/60 pt-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
+          <span>
+            Nem <span className="font-medium text-foreground tabular-nums">{productTotals.nemTong}</span>{" "}
+            <span className="text-xs">
+              (ăn liền <span className="tabular-nums">{productTotals.nemAnLien}</span>, mới{" "}
+              <span className="tabular-nums">{productTotals.nemMoi}</span>)
+            </span>
+          </span>
+          <span>
+            Bì <span className="font-medium text-foreground tabular-nums">{productTotals.bi}</span>
+          </span>
+          <span>
+            Chả <span className="font-medium text-foreground tabular-nums">{productTotals.cha}</span>
+          </span>
+        </div>
+        <p className="text-muted-foreground sm:text-right">
+          Tổng {totals.soLuongTong} phần · dự kiến bán{" "}
+          <span className="font-medium text-foreground tabular-nums">{formatVnd(totals.tienBan)}</span>
+        </p>
+      </div>
 
       <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
         <DialogContent className="sm:max-w-lg">
