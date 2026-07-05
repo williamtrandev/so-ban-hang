@@ -131,6 +131,10 @@ export interface SellerBreakdownRow {
   name: string;
   count: number;
   soLuong: number;
+  nemAnLien: number;
+  nemMoi: number;
+  bi: number;
+  cha: number;
   tienBan: number;
   tienGoc: number;
   tienLoi: number;
@@ -140,11 +144,28 @@ export function buildSellerBreakdown(orders: OrderRow[]): SellerBreakdownRow[] {
   const map = new Map<string, SellerBreakdownRow>();
   for (const o of orders) {
     const name = o.profiles?.full_name ?? "Không rõ";
-    const row = map.get(name) ?? { name, count: 0, soLuong: 0, tienBan: 0, tienGoc: 0, tienLoi: 0 };
+    const row =
+      map.get(name) ??
+      ({
+        name,
+        count: 0,
+        soLuong: 0,
+        nemAnLien: 0,
+        nemMoi: 0,
+        bi: 0,
+        cha: 0,
+        tienBan: 0,
+        tienGoc: 0,
+        tienLoi: 0,
+      } satisfies SellerBreakdownRow);
     const tienBan = orderTienBan(o);
     const tienGoc = orderTienGoc(o);
     row.count += 1;
     row.soLuong += orderSoLuongNem(o) + o.so_luong_bi + o.so_luong_cha;
+    row.nemAnLien += o.so_luong_nem_an_lien;
+    row.nemMoi += o.so_luong_nem_moi;
+    row.bi += o.so_luong_bi;
+    row.cha += o.so_luong_cha;
     row.tienBan += tienBan;
     row.tienGoc += tienGoc;
     row.tienLoi += tienBan - tienGoc;

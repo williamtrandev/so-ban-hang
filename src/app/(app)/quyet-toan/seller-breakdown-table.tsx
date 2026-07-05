@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatVnd, type SellerBreakdownRow } from "@/lib/domain/types";
+import { formatVnd, nemBiChaLabel, type SellerBreakdownRow } from "@/lib/domain/types";
 
 export function SellerBreakdownTable({ rows }: { rows: SellerBreakdownRow[] }) {
   return (
@@ -21,6 +21,9 @@ export function SellerBreakdownTable({ rows }: { rows: SellerBreakdownRow[] }) {
                 {row.soLuong} phần · {row.count} đơn
               </span>
             </div>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {nemBiChaLabel(row.nemAnLien, row.nemMoi, row.bi, row.cha)}
+            </p>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div className="flex flex-col gap-0.5">
                 <span className="text-xs text-muted-foreground">Tiền nhận</span>
@@ -55,8 +58,15 @@ export function SellerBreakdownTable({ rows }: { rows: SellerBreakdownRow[] }) {
             {rows.map((row) => (
               <TableRow key={row.name}>
                 <TableCell className="font-medium">{row.name}</TableCell>
-                <TableCell className="text-right whitespace-nowrap tabular-nums text-muted-foreground">
-                  {row.soLuong} phần · {row.count} đơn
+                <TableCell className="text-right tabular-nums text-muted-foreground">
+                  <div className="flex flex-col">
+                    <span className="whitespace-nowrap">
+                      {row.soLuong} phần · {row.count} đơn
+                    </span>
+                    <span className="text-xs">
+                      {nemBiChaLabel(row.nemAnLien, row.nemMoi, row.bi, row.cha)}
+                    </span>
+                  </div>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{formatVnd(row.tienBan)}</TableCell>
                 <TableCell className="text-right tabular-nums text-muted-foreground">
