@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, ReceiptText, Users } from "lucide-react";
+import { Loader2, Package, ReceiptText, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import {
   orderTienBan,
   soLuongLabel,
   buildSellerBreakdown,
+  calcProductTotals,
   type OrderRow,
 } from "@/lib/domain/types";
 
@@ -62,6 +63,33 @@ export function SettlementDetailDialog({
           </div>
         ) : (
           <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <h3 className="flex items-center gap-1.5 text-sm font-medium">
+                <Package className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
+                Số lượng đã bán
+              </h3>
+              {(() => {
+                const pt = calcProductTotals(orders);
+                return (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
+                    <span>
+                      Nem <span className="font-medium text-foreground tabular-nums">{pt.nemTong}</span>{" "}
+                      <span className="text-xs">
+                        (ăn liền <span className="tabular-nums">{pt.nemAnLien}</span>, mới{" "}
+                        <span className="tabular-nums">{pt.nemMoi}</span>)
+                      </span>
+                    </span>
+                    <span>
+                      Bì <span className="font-medium text-foreground tabular-nums">{pt.bi}</span>
+                    </span>
+                    <span>
+                      Chả <span className="font-medium text-foreground tabular-nums">{pt.cha}</span>
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+
             <div className="flex flex-col gap-2">
               <h3 className="flex items-center gap-1.5 text-sm font-medium">
                 <Users className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
