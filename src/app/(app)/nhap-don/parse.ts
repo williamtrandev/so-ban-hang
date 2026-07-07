@@ -1,18 +1,20 @@
 // Parser cho tính năng nhập nhanh nhiều đơn dạng text.
 // Mỗi dòng = 1 đơn. Cột ngăn bởi dấu phẩy HOẶC tab (paste thẳng từ Excel/Sheets).
 // Cột đầu = tên người mua. Các cột sau KHÔNG theo thứ tự cố định, mỗi cột là 1 token:
-//   <số><đơn vị> với đơn vị: n = nem ăn liền, nm = nem mới, b = bì, c = chả
+//   <số><đơn vị>. Nem và bì có 2 loại đóng gói: l = lá, h = hộp.
+//     nl  = nem ăn liền lá     nh  = nem ăn liền hộp
+//     nml = nem mới lá         nmh = nem mới hộp
+//     bl  = bì lá              bh  = bì hộp
+//     c   = chả
 //   token trạng thái: "tt" = đã thanh toán, "giao" = đã giao
 //   còn lại = ghi chú
-// Ví dụ: "Cô Bảy chợ Xổm, 2n, 2nm, 1b, 1c, tt, giao, gói riêng"
+// Ví dụ: "Cô Bảy chợ Xổm, 2nl, 1nmh, 1bl, 1c, tt, giao, gói riêng"
 // Dùng chung cho client (preview) và server (validate + insert).
 
-export type ParsedOrder = {
+import { zeroSoLuong, type SoLuong } from "@/lib/domain/types";
+
+export type ParsedOrder = SoLuong & {
   ten_nguoi_mua: string;
-  so_luong_nem_an_lien: number;
-  so_luong_nem_moi: number;
-  so_luong_bi: number;
-  so_luong_cha: number;
   ghi_chu: string | null;
   da_thanh_toan: boolean;
   da_giao: boolean;
@@ -25,15 +27,18 @@ export type ParseLineResult =
 const PAID_TOKENS = new Set(["tt", "đã tt", "thanh toán", "đã thanh toán", "paid"]);
 const DELIVERED_TOKENS = new Set(["giao", "đã giao", "delivered", "ship"]);
 
-// nm phải đứng trước n trong alternation để "2nm" không bị bắt nhầm thành "2n".
-const QTY_RE = /^(\d+)\s*(nm|n|b|c)$/i;
+// Đơn vị dài (nml/nmh) đứng trước đơn vị ngắn (nl/nh) để khớp đúng.
+const QTY_RE = /^(\d+)\s*(nml|nmh|nl|nh|bl|bh|c)$/i;
 
 const QTY_FIELD = {
-  n: "so_luong_nem_an_lien",
-  nm: "so_luong_nem_moi",
-  b: "so_luong_bi",
+  nl: "so_luong_nem_an_lien_la",
+  nh: "so_luong_nem_an_lien_hop",
+  nml: "so_luong_nem_moi_la",
+  nmh: "so_luong_nem_moi_hop",
+  bl: "so_luong_bi_la",
+  bh: "so_luong_bi_hop",
   c: "so_luong_cha",
-} as const;
+} as const satisfies Record<string, keyof SoLuong>;
 
 export function parseBulkOrders(text: string): ParseLineResult[] {
   const results: ParseLineResult[] = [];
@@ -51,12 +56,7 @@ export function parseBulkOrders(text: string): ParseLineResult[] {
       return;
     }
 
-    const qty = {
-      so_luong_nem_an_lien: 0,
-      so_luong_nem_moi: 0,
-      so_luong_bi: 0,
-      so_luong_cha: 0,
-    };
+    const qty = zeroSoLuong();
     let da_thanh_toan = false;
     let da_giao = false;
     const noteParts: string[] = [];
@@ -78,17 +78,13 @@ export function parseBulkOrders(text: string): ParseLineResult[] {
       }
     }
 
-    if (
-      qty.so_luong_nem_an_lien === 0 &&
-      qty.so_luong_nem_moi === 0 &&
-      qty.so_luong_bi === 0 &&
-      qty.so_luong_cha === 0
-    ) {
+    const coSoLuong = Object.values(qty).some((n) => n > 0);
+    if (!coSoLuong) {
       results.push({
         ok: false,
         line,
         raw,
-        error: "Cần ít nhất 1 số lượng (vd: 2n, 2nm, 1b, 1c).",
+        error: "Cần ít nhất 1 số lượng (vd: 2nl, 1nmh, 1bl, 1c).",
       });
       return;
     }

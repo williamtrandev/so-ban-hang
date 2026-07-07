@@ -7,7 +7,14 @@ import { parseBulkOrders } from "./parse";
 import { useOrders, toOptimisticOrder } from "./orders-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatVnd, nemBiChaLabel, type Price, type PriceGroup } from "@/lib/domain/types";
+import {
+  formatVnd,
+  orderSoLuongNem,
+  orderSoLuongBi,
+  soLuongLabel,
+  type Price,
+  type PriceGroup,
+} from "@/lib/domain/types";
 
 export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
   const { apply, currentUserId } = useOrders();
@@ -33,7 +40,7 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
     if (!result?.ok) return 0;
     const o = result.order;
     return (
-      (o.so_luong_nem_an_lien + o.so_luong_nem_moi + o.so_luong_bi) * (prices.nem_bi?.gia_ban ?? 0) +
+      (orderSoLuongNem(o) + orderSoLuongBi(o)) * (prices.nem_bi?.gia_ban ?? 0) +
       o.so_luong_cha * (prices.cha?.gia_ban ?? 0)
     );
   }, [result, prices]);
@@ -64,7 +71,7 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
           onChange={(e) => setText(e.target.value)}
           autoComplete="off"
           autoFocus
-          placeholder="Cô Bảy chợ Xổm, 2n, 2nm, 1b, 1c, tt, giao, gói riêng"
+          placeholder="Cô Bảy chợ Xổm, 2nl, 1nmh, 1bl, 1c, tt, giao, gói riêng"
           className="font-mono tabular-nums"
         />
         <Button type="submit" disabled={!canSubmit}>
@@ -77,12 +84,7 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
         {result?.ok ? (
           <span className="truncate text-muted-foreground">
             <span className="font-medium text-foreground">{result.order.ten_nguoi_mua}</span> —{" "}
-            {nemBiChaLabel(
-              result.order.so_luong_nem_an_lien,
-              result.order.so_luong_nem_moi,
-              result.order.so_luong_bi,
-              result.order.so_luong_cha,
-            )}
+            {soLuongLabel(result.order)}
             {result.order.da_thanh_toan && <span className="text-primary"> · TT</span>}
             {result.order.da_giao && <span className="text-primary"> · Giao</span>}
             {result.order.ghi_chu && (
@@ -93,7 +95,8 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
           <span className="truncate text-destructive">{result.error}</span>
         ) : (
           <span className="truncate text-muted-foreground">
-            Cú pháp: Tên, 2n, 2nm, 1b, 1c, [tt], [giao], [ghi chú] · n=nem, nm=nem mới, b=bì, c=chả
+            Cú pháp: Tên, 2nl, 1nmh, 1bl, 1c, [tt], [giao] · nl/nh=nem ăn liền lá/hộp, nml/nmh=nem mới
+            lá/hộp, bl/bh=bì lá/hộp, c=chả
           </span>
         )}
         {tongTien > 0 && (

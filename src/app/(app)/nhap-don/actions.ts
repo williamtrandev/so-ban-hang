@@ -3,25 +3,30 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPrices } from "@/lib/domain/data";
+import { SOLUONG_LEAVES, zeroSoLuong, type SoLuong } from "@/lib/domain/types";
 import { parseBulkOrders } from "./parse";
+
+// Đọc 7 trường số lượng từ form. Trả null nếu có trường không hợp lệ hoặc tất cả = 0.
+function readSoLuong(formData: FormData): SoLuong | null {
+  const q = zeroSoLuong();
+  for (const l of SOLUONG_LEAVES) {
+    const n = Number(formData.get(l.key) || 0);
+    if (!Number.isInteger(n) || n < 0) return null;
+    q[l.key] = n;
+  }
+  if (!Object.values(q).some((n) => n > 0)) return null;
+  return q;
+}
 
 export async function createOrder(_prevState: string | null, formData: FormData): Promise<string | null> {
   const tenNguoiMua = String(formData.get("ten_nguoi_mua") ?? "").trim();
-  const soLuongNemAnLien = Number(formData.get("so_luong_nem_an_lien") || 0);
-  const soLuongNemMoi = Number(formData.get("so_luong_nem_moi") || 0);
-  const soLuongBi = Number(formData.get("so_luong_bi") || 0);
-  const soLuongCha = Number(formData.get("so_luong_cha") || 0);
   const ghiChu = String(formData.get("ghi_chu") ?? "").trim();
   const daThanhToan = formData.get("da_thanh_toan") === "on";
   const daGiao = formData.get("da_giao") === "on";
 
   if (!tenNguoiMua) return "Nhập tên người mua.";
-  for (const n of [soLuongNemAnLien, soLuongNemMoi, soLuongBi, soLuongCha]) {
-    if (!Number.isInteger(n) || n < 0) return "Số lượng phải là số nguyên không âm.";
-  }
-  if (soLuongNemAnLien === 0 && soLuongNemMoi === 0 && soLuongBi === 0 && soLuongCha === 0) {
-    return "Nhập ít nhất 1 số lượng (nem, bì, hoặc chả).";
-  }
+  const qty = readSoLuong(formData);
+  if (!qty) return "Nhập ít nhất 1 số lượng hợp lệ (nem, bì, hoặc chả).";
 
   const supabase = await createClient();
   const {
@@ -37,10 +42,7 @@ export async function createOrder(_prevState: string | null, formData: FormData)
   const { error } = await supabase.from("orders").insert({
     seller_id: user.id,
     ten_nguoi_mua: tenNguoiMua,
-    so_luong_nem_an_lien: soLuongNemAnLien,
-    so_luong_nem_moi: soLuongNemMoi,
-    so_luong_bi: soLuongBi,
-    so_luong_cha: soLuongCha,
+    ...qty,
     ghi_chu: ghiChu || null,
     da_thanh_toan: daThanhToan,
     da_giao: daGiao,
@@ -85,16 +87,14 @@ export async function createBulkOrders(
   const rows = parsed.map((r) => {
     // Ép narrow: mọi phần tử ở đây đều ok (đã return ở firstError).
     const o = (r as Extract<typeof r, { ok: true }>).order;
+    const { ten_nguoi_mua, ghi_chu, da_thanh_toan, da_giao, ...qty } = o;
     return {
       seller_id: user.id,
-      ten_nguoi_mua: o.ten_nguoi_mua,
-      so_luong_nem_an_lien: o.so_luong_nem_an_lien,
-      so_luong_nem_moi: o.so_luong_nem_moi,
-      so_luong_bi: o.so_luong_bi,
-      so_luong_cha: o.so_luong_cha,
-      ghi_chu: o.ghi_chu,
-      da_thanh_toan: o.da_thanh_toan,
-      da_giao: o.da_giao,
+      ten_nguoi_mua,
+      ...qty,
+      ghi_chu,
+      da_thanh_toan,
+      da_giao,
       gia_goc_nem_bi_snap: nemBi.gia_goc,
       gia_ban_nem_bi_snap: nemBi.gia_ban,
       gia_goc_cha_snap: cha.gia_goc,
@@ -136,21 +136,13 @@ export async function updateOrder(
   formData: FormData,
 ): Promise<string | null> {
   const tenNguoiMua = String(formData.get("ten_nguoi_mua") ?? "").trim();
-  const soLuongNemAnLien = Number(formData.get("so_luong_nem_an_lien") || 0);
-  const soLuongNemMoi = Number(formData.get("so_luong_nem_moi") || 0);
-  const soLuongBi = Number(formData.get("so_luong_bi") || 0);
-  const soLuongCha = Number(formData.get("so_luong_cha") || 0);
   const ghiChu = String(formData.get("ghi_chu") ?? "").trim();
   const daThanhToan = formData.get("da_thanh_toan") === "on";
   const daGiao = formData.get("da_giao") === "on";
 
   if (!tenNguoiMua) return "Nhập tên người mua.";
-  for (const n of [soLuongNemAnLien, soLuongNemMoi, soLuongBi, soLuongCha]) {
-    if (!Number.isInteger(n) || n < 0) return "Số lượng phải là số nguyên không âm.";
-  }
-  if (soLuongNemAnLien === 0 && soLuongNemMoi === 0 && soLuongBi === 0 && soLuongCha === 0) {
-    return "Nhập ít nhất 1 số lượng (nem, bì, hoặc chả).";
-  }
+  const qty = readSoLuong(formData);
+  if (!qty) return "Nhập ít nhất 1 số lượng hợp lệ (nem, bì, hoặc chả).";
 
   const supabase = await createClient();
   const {
@@ -162,10 +154,7 @@ export async function updateOrder(
     .from("orders")
     .update({
       ten_nguoi_mua: tenNguoiMua,
-      so_luong_nem_an_lien: soLuongNemAnLien,
-      so_luong_nem_moi: soLuongNemMoi,
-      so_luong_bi: soLuongBi,
-      so_luong_cha: soLuongCha,
+      ...qty,
       ghi_chu: ghiChu || null,
       da_thanh_toan: daThanhToan,
       da_giao: daGiao,

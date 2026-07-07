@@ -74,16 +74,20 @@ export function SettlementDetailDialog({
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
                     <span>
                       Nem <span className="font-medium text-foreground tabular-nums">{pt.nemTong}</span>{" "}
-                      <span className="text-xs">
-                        (ăn liền <span className="tabular-nums">{pt.nemAnLien}</span>, mới{" "}
-                        <span className="tabular-nums">{pt.nemMoi}</span>)
+                      <span className="text-xs tabular-nums">
+                        (ăn liền: lá {pt.so_luong_nem_an_lien_la}, hộp {pt.so_luong_nem_an_lien_hop};
+                        mới: lá {pt.so_luong_nem_moi_la}, hộp {pt.so_luong_nem_moi_hop})
                       </span>
                     </span>
                     <span>
-                      Bì <span className="font-medium text-foreground tabular-nums">{pt.bi}</span>
+                      Bì <span className="font-medium text-foreground tabular-nums">{pt.biTong}</span>{" "}
+                      <span className="text-xs tabular-nums">
+                        (lá {pt.so_luong_bi_la}, hộp {pt.so_luong_bi_hop})
+                      </span>
                     </span>
                     <span>
-                      Chả <span className="font-medium text-foreground tabular-nums">{pt.cha}</span>
+                      Chả{" "}
+                      <span className="font-medium text-foreground tabular-nums">{pt.so_luong_cha}</span>
                     </span>
                   </div>
                 );

@@ -298,16 +298,23 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
           <span>
             Nem <span className="font-medium text-foreground tabular-nums">{productTotals.nemTong}</span>{" "}
-            <span className="text-xs">
-              (ăn liền <span className="tabular-nums">{productTotals.nemAnLien}</span>, mới{" "}
-              <span className="tabular-nums">{productTotals.nemMoi}</span>)
+            <span className="text-xs tabular-nums">
+              (ăn liền: lá {productTotals.so_luong_nem_an_lien_la}, hộp{" "}
+              {productTotals.so_luong_nem_an_lien_hop}; mới: lá {productTotals.so_luong_nem_moi_la}, hộp{" "}
+              {productTotals.so_luong_nem_moi_hop})
             </span>
           </span>
           <span>
-            Bì <span className="font-medium text-foreground tabular-nums">{productTotals.bi}</span>
+            Bì <span className="font-medium text-foreground tabular-nums">{productTotals.biTong}</span>{" "}
+            <span className="text-xs tabular-nums">
+              (lá {productTotals.so_luong_bi_la}, hộp {productTotals.so_luong_bi_hop})
+            </span>
           </span>
           <span>
-            Chả <span className="font-medium text-foreground tabular-nums">{productTotals.cha}</span>
+            Chả{" "}
+            <span className="font-medium text-foreground tabular-nums">
+              {productTotals.so_luong_cha}
+            </span>
           </span>
         </div>
         <p className="text-muted-foreground sm:text-right">

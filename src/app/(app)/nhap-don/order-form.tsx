@@ -9,15 +9,27 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { formatVnd, type OrderRow, type Price, type PriceGroup } from "@/lib/domain/types";
+import {
+  formatVnd,
+  orderSoLuongNem,
+  orderSoLuongBi,
+  zeroSoLuong,
+  type OrderRow,
+  type Price,
+  type PriceGroup,
+  type SoLuong,
+} from "@/lib/domain/types";
 
-type QtyKey = "nem_an_lien" | "nem_moi" | "bi" | "cha";
+type QtyKey = keyof SoLuong;
 
-const QUANTITY_FIELDS: { key: QtyKey; name: string; label: string; group: PriceGroup }[] = [
-  { key: "nem_an_lien", name: "so_luong_nem_an_lien", label: "Nem ăn liền", group: "nem_bi" },
-  { key: "nem_moi", name: "so_luong_nem_moi", label: "Nem mới", group: "nem_bi" },
-  { key: "bi", name: "so_luong_bi", label: "Bì", group: "nem_bi" },
-  { key: "cha", name: "so_luong_cha", label: "Chả", group: "cha" },
+const QUANTITY_FIELDS: { key: QtyKey; label: string; group: PriceGroup }[] = [
+  { key: "so_luong_nem_an_lien_la", label: "Nem ăn liền lá", group: "nem_bi" },
+  { key: "so_luong_nem_an_lien_hop", label: "Nem ăn liền hộp", group: "nem_bi" },
+  { key: "so_luong_nem_moi_la", label: "Nem mới lá", group: "nem_bi" },
+  { key: "so_luong_nem_moi_hop", label: "Nem mới hộp", group: "nem_bi" },
+  { key: "so_luong_bi_la", label: "Bì lá", group: "nem_bi" },
+  { key: "so_luong_bi_hop", label: "Bì hộp", group: "nem_bi" },
+  { key: "so_luong_cha", label: "Chả", group: "cha" },
 ];
 
 export function OrderForm({
@@ -34,11 +46,10 @@ export function OrderForm({
   const [error, formAction, pending] = useActionState(action, null);
   const formRef = useRef<HTMLFormElement>(null);
   const submittedRef = useRef(false);
-  const [qty, setQty] = useState<Record<QtyKey, number>>({
-    nem_an_lien: order?.so_luong_nem_an_lien ?? 0,
-    nem_moi: order?.so_luong_nem_moi ?? 0,
-    bi: order?.so_luong_bi ?? 0,
-    cha: order?.so_luong_cha ?? 0,
+  const [qty, setQty] = useState<SoLuong>(() => {
+    const q = zeroSoLuong();
+    if (order) for (const f of QUANTITY_FIELDS) q[f.key] = order[f.key];
+    return q;
   });
 
   useEffect(() => {
@@ -51,7 +62,7 @@ export function OrderForm({
       if (!isEdit) {
         formRef.current?.reset();
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setQty({ nem_an_lien: 0, nem_moi: 0, bi: 0, cha: 0 });
+        setQty(zeroSoLuong());
       }
       onSuccess?.();
     }
@@ -68,8 +79,8 @@ export function OrderForm({
   }
 
   const tongTien =
-    (qty.nem_an_lien + qty.nem_moi + qty.bi) * (prices.nem_bi?.gia_ban ?? 0) +
-    qty.cha * (prices.cha?.gia_ban ?? 0);
+    (orderSoLuongNem(qty) + orderSoLuongBi(qty)) * (prices.nem_bi?.gia_ban ?? 0) +
+    qty.so_luong_cha * (prices.cha?.gia_ban ?? 0);
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-5">
@@ -94,7 +105,7 @@ export function OrderForm({
             className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/30 px-3 py-2"
           >
             <div className="flex flex-col">
-              <Label htmlFor={f.name} className="text-sm">
+              <Label htmlFor={f.key} className="text-sm">
                 {f.label}
               </Label>
               <span className="text-[11px] text-muted-foreground tabular-nums">
@@ -113,8 +124,8 @@ export function OrderForm({
                 <Minus />
               </Button>
               <Input
-                id={f.name}
-                name={f.name}
+                id={f.key}
+                name={f.key}
                 type="number"
                 min={0}
                 step={1}
