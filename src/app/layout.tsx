@@ -17,11 +17,40 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// [cssWidth, cssHeight, pixelRatio] — khớp scripts/generate-splash.mjs.
+// iOS chỉ hiện splash khi có ảnh đúng size màn hình + media query tương ứng.
+const SPLASH_DEVICES: [number, number, number][] = [
+  [320, 568, 2],
+  [375, 667, 2],
+  [414, 736, 3],
+  [375, 812, 3],
+  [414, 896, 2],
+  [414, 896, 3],
+  [390, 844, 3],
+  [393, 852, 3],
+  [402, 874, 3],
+  [428, 926, 3],
+  [430, 932, 3],
+  [440, 956, 3],
+  [768, 1024, 2],
+  [820, 1180, 2],
+  [834, 1194, 2],
+  [1024, 1366, 2],
+];
+
 export const metadata: Metadata = {
   title: "Sổ bán nem, bì, chả",
   description: "Quản lý bán nem, bì, chả lụa và quyết toán theo đợt",
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "Sổ bán hàng" },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Sổ bán hàng",
+    startupImage: SPLASH_DEVICES.map(([w, h, r]) => ({
+      url: `/splash/splash-${w * r}x${h * r}.png`,
+      media: `(device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: portrait)`,
+    })),
+  },
 };
 
 export const viewport: Viewport = {
