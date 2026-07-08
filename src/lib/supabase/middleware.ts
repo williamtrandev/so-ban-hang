@@ -29,25 +29,28 @@ export async function updateSession(request: NextRequest) {
   const isBypassPath = BYPASS_PATHS.some((path) => request.nextUrl.pathname.startsWith(path));
   if (isBypassPath) return supabaseResponse;
 
-  let user = null;
+  // getSession đọc cookie tại chỗ: token còn hạn thì KHÔNG gọi mạng (giữ TTFB
+  // thấp để splash paint ngay khi mở PWA), hết hạn mới refresh qua Supabase.
+  // Middleware chỉ định tuyến; xác thực thật nằm ở (app)/layout (getUser + profile).
+  let session = null;
   try {
     const {
-      data: { user: fetchedUser },
-    } = await supabase.auth.getUser();
-    user = fetchedUser;
+      data: { session: fetchedSession },
+    } = await supabase.auth.getSession();
+    session = fetchedSession;
   } catch {
     // Supabase unreachable: fail closed, treat as logged out
   }
 
   const isPublicPath = PUBLIC_PATHS.some((path) => request.nextUrl.pathname.startsWith(path));
 
-  if (!user && !isPublicPath) {
+  if (!session && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/dang-nhap";
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublicPath) {
+  if (session && isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/nhap-don";
     return NextResponse.redirect(url);
