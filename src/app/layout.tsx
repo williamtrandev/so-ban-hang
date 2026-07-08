@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { SwRegister } from "@/components/sw-register";
 import { GrainOverlay } from "@/components/grain-overlay";
+import { SplashScreen } from "@/components/splash-screen";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -48,7 +50,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <GrainOverlay />
-        {children}
+        {/* Root layout sync -> stream ngay; splash hiện tức thì trong lúc
+            (app)/layout chờ auth + profile phía server (nguyên nhân màn đen cũ). */}
+        <Suspense fallback={<SplashScreen />}>{children}</Suspense>
         <Toaster />
         <SwRegister />
       </body>
