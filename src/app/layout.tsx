@@ -17,8 +17,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// [cssWidth, cssHeight, pixelRatio] — khớp scripts/generate-splash.mjs.
-// iOS chỉ hiện splash khi có ảnh đúng size màn hình + media query tương ứng.
+// [cssWidth, cssHeight, pixelRatio] — kích thước logic theo chiều dọc, khớp
+// scripts/generate-splash.mjs. iOS cần khai báo CẢ 2 orientation cho mỗi máy,
+// thiếu hướng nào thì hướng đó không hiện splash.
 const SPLASH_DEVICES: [number, number, number][] = [
   [320, 568, 2],
   [375, 667, 2],
@@ -29,6 +30,7 @@ const SPLASH_DEVICES: [number, number, number][] = [
   [390, 844, 3],
   [393, 852, 3],
   [402, 874, 3],
+  [420, 912, 3],
   [428, 926, 3],
   [430, 932, 3],
   [440, 956, 3],
@@ -46,10 +48,16 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Sổ bán hàng",
-    startupImage: SPLASH_DEVICES.map(([w, h, r]) => ({
-      url: `/splash/splash-${w * r}x${h * r}.png`,
-      media: `(device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: portrait)`,
-    })),
+    startupImage: SPLASH_DEVICES.flatMap(([w, h, r]) => [
+      {
+        url: `/splash/splash-${w * r}x${h * r}.png`,
+        media: `screen and (device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: portrait)`,
+      },
+      {
+        url: `/splash/splash-${h * r}x${w * r}.png`,
+        media: `screen and (device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: landscape)`,
+      },
+    ]),
   },
 };
 

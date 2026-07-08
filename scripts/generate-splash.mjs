@@ -8,7 +8,9 @@ const BG = "#0a0a0a";
 const ICON = "public/icons/icon-512.png";
 const OUT_DIR = "public/splash";
 
-// [cssWidth, cssHeight, pixelRatio] — portrait, danh sách iPhone/iPad hiện hành.
+// [cssWidth, cssHeight, pixelRatio] — kích thước LOGIC theo chiều dọc.
+// Mỗi máy sinh 2 ảnh: dọc (WxH) và ngang (HxW) — iOS cần khai báo cả 2
+// orientation, nếu thiếu sẽ không hiện splash ở hướng còn lại.
 export const DEVICES = [
   [320, 568, 2], // iPhone SE 1
   [375, 667, 2], // iPhone 6/7/8/SE 2-3
@@ -16,12 +18,13 @@ export const DEVICES = [
   [375, 812, 3], // iPhone X/XS/11 Pro/12-13 mini
   [414, 896, 2], // iPhone XR/11
   [414, 896, 3], // iPhone XS Max/11 Pro Max
-  [390, 844, 3], // iPhone 12/13/14
-  [393, 852, 3], // iPhone 14 Pro/15/16
-  [402, 874, 3], // iPhone 16 Pro
+  [390, 844, 3], // iPhone 12/13/14/16e
+  [393, 852, 3], // iPhone 14 Pro/15/16/17
+  [402, 874, 3], // iPhone 16 Pro/17 Pro
+  [420, 912, 3], // iPhone Air
   [428, 926, 3], // iPhone 12-13 Pro Max/14 Plus
   [430, 932, 3], // iPhone 14 Pro Max/15 Plus-Pro Max/16 Plus
-  [440, 956, 3], // iPhone 16 Pro Max
+  [440, 956, 3], // iPhone 16 Pro Max/17 Pro Max
   [768, 1024, 2], // iPad 9.7"
   [820, 1180, 2], // iPad 10.9"
   [834, 1194, 2], // iPad Pro 11"
@@ -31,9 +34,13 @@ export const DEVICES = [
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
-  for (const [w, h, r] of DEVICES) {
-    const W = w * r;
-    const H = h * r;
+  // Dọc + ngang cho từng máy.
+  const sizes = DEVICES.flatMap(([w, h, r]) => [
+    [w * r, h * r],
+    [h * r, w * r],
+  ]);
+
+  for (const [W, H] of sizes) {
     // Icon ~24% cạnh ngắn, bo góc kiểu iOS (~22% radius).
     const size = Math.round(Math.min(W, H) * 0.24);
     const radius = Math.round(size * 0.22);
