@@ -37,8 +37,7 @@ export function SettlementHistory({ settlements }: { settlements: SettlementRow[
 
   return (
     <>
-      {/* List thống nhất mọi breakpoint: khung hẹp (cột nửa màn hình), bảng sẽ chật. */}
-      <ul className="max-h-[420px] divide-y divide-border/60 overflow-y-auto rounded-lg border border-border/60">
+      <ul className="divide-y divide-border/60 rounded-lg border border-border/60">
         {settlements.map((s, i) => (
           <li key={s.id}>
             <button

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { NotebookText, PencilLine, Wallet, Users, LogOut, type LucideIcon } from "lucide-react";
+import { NotebookText, PencilLine, Wallet, History, Users, LogOut, type LucideIcon } from "lucide-react";
 import { signOut } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -21,6 +21,7 @@ type NavLink = { href: string; label: string; icon: LucideIcon; secondary?: bool
 const LINKS: NavLink[] = [
   { href: "/nhap-don", label: "Nhập đơn", icon: PencilLine },
   { href: "/quyet-toan", label: "Quyết toán", icon: Wallet },
+  { href: "/lich-su", label: "Lịch sử", icon: History, secondary: true },
 ];
 
 // secondary: label chỉ hiện trên desktop, mobile gọn còn icon để khỏi tràn header.

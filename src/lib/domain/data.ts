@@ -47,6 +47,15 @@ export async function getSettlementHistory(supabase: SupabaseClient): Promise<Se
   return data as SettlementRow[];
 }
 
+// Toàn bộ đơn (đã chốt + đang bán) để tính doanh thu từng người toàn thời gian.
+// Quy mô gia đình, bảng nhỏ: fetch hết rồi gộp phía server component.
+export async function getAllOrders(supabase: SupabaseClient): Promise<OrderRow[]> {
+  const { data, error } = await supabase.from("orders").select("*, profiles(full_name)");
+
+  if (error) throw error;
+  return data as OrderRow[];
+}
+
 export async function getSettlementOrders(
   supabase: SupabaseClient,
   settlementId: string,

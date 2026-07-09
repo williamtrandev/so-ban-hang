@@ -2,9 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getPendingOrders, getSettlementOrders } from "@/lib/domain/data";
+import { getPendingOrders } from "@/lib/domain/data";
 import { calcTotals } from "@/lib/domain/types";
-import type { OrderRow } from "@/lib/domain/types";
 
 export interface CloseSettlementState {
   error: string | null;
@@ -84,9 +83,4 @@ export async function updatePrices(
   revalidatePath("/nhap-don");
   revalidatePath("/quyet-toan");
   return { error: null, saved: true };
-}
-
-export async function getSettlementDetail(settlementId: string): Promise<OrderRow[]> {
-  const supabase = await createClient();
-  return getSettlementOrders(supabase, settlementId);
 }

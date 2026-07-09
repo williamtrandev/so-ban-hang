@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { SoLuongChips } from "@/components/soluong-chips";
-import { SellerBreakdownTable } from "./seller-breakdown-table";
+import { SellerBreakdownTable } from "../quyet-toan/seller-breakdown-table";
 import {
   formatVnd,
   formatDateTime,

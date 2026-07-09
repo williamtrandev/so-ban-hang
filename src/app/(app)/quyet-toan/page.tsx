@@ -1,10 +1,15 @@
-import { Banknote, TrendingUp, History } from "lucide-react";
+import Link from "next/link";
+import { Banknote, TrendingUp, History, ChevronRight, Crown } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentPrices, getPendingOrders, getSettlementHistory } from "@/lib/domain/data";
+import {
+  getCurrentPrices,
+  getPendingOrders,
+  getSettlementHistory,
+  getAllOrders,
+} from "@/lib/domain/data";
 import { calcTotals, buildSellerBreakdown, formatVnd } from "@/lib/domain/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SettlementPanel } from "./settlement-panel";
-import { SettlementHistory } from "./settlement-history";
 
 export default async function QuyetToanPage() {
   const supabase = await createClient();
@@ -18,14 +23,17 @@ export default async function QuyetToanPage() {
     .eq("id", user!.id)
     .single();
 
-  const [prices, pendingOrders, history] = await Promise.all([
+  const [prices, pendingOrders, history, allOrders] = await Promise.all([
     getCurrentPrices(supabase),
     getPendingOrders(supabase),
     getSettlementHistory(supabase),
+    getAllOrders(supabase),
   ]);
 
   const totals = calcTotals(pendingOrders);
   const sellerBreakdown = buildSellerBreakdown(pendingOrders);
+  // Doanh thu từng người toàn thời gian (mọi đơn, đã chốt + đang bán).
+  const allTimeBySeller = buildSellerBreakdown(allOrders);
 
   // Tổng doanh thu toàn thời gian: các đợt đã chốt + đợt đang bán.
   const daChot = history.reduce(
@@ -61,7 +69,7 @@ export default async function QuyetToanPage() {
       <header className="flex flex-col gap-1">
         <h1 className="font-heading text-2xl font-semibold tracking-tight">Quyết toán</h1>
         <p className="text-sm text-muted-foreground">
-          Chốt đợt hiện tại và xem lại các đợt đã quyết toán trước đó.
+          Thống kê doanh thu và chốt đợt bán hiện tại.
         </p>
       </header>
 
@@ -104,31 +112,78 @@ export default async function QuyetToanPage() {
         ))}
       </dl>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
-        <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <CardHeader>
-            <CardTitle>Quyết toán đợt hiện tại</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SettlementPanel
-              totals={totals}
-              pendingCount={pendingOrders.length}
-              isAdmin={profile?.role === "admin"}
-              prices={prices}
-              sellerBreakdown={sellerBreakdown}
-            />
-          </CardContent>
-        </Card>
+      <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:100ms] [animation-fill-mode:backwards]">
+        <CardHeader>
+          <CardTitle>Doanh thu theo người bán</CardTitle>
+          <CardDescription>Toàn thời gian, gồm cả đợt đang bán.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {allTimeBySeller.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Chưa có đơn nào.</p>
+          ) : (
+            <ul className="divide-y divide-border/60">
+              {allTimeBySeller.map((row, i) => (
+                <li key={row.name} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                  <span
+                    className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ${
+                      i === 0 ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {i === 0 ? <Crown className="size-4" strokeWidth={1.75} /> : i + 1}
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-medium">{row.name}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {row.count} đơn · {row.soLuong} phần
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end">
+                    <span className="text-sm font-semibold tabular-nums">
+                      {formatVnd(row.tienBan)}
+                    </span>
+                    <span className="text-xs tabular-nums text-primary">
+                      +{formatVnd(row.tienLoi)} lời
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
-        <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:100ms] [animation-fill-mode:backwards]">
-          <CardHeader>
-            <CardTitle>Lịch sử quyết toán</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SettlementHistory settlements={history} />
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
+        <CardHeader>
+          <CardTitle>Quyết toán đợt hiện tại</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SettlementPanel
+            totals={totals}
+            pendingCount={pendingOrders.length}
+            isAdmin={profile?.role === "admin"}
+            prices={prices}
+            sellerBreakdown={sellerBreakdown}
+          />
+        </CardContent>
+      </Card>
+
+      <Link
+        href="/lich-su"
+        className="group flex items-center justify-between rounded-xl bg-card p-4 ring-1 ring-foreground/10 transition-colors hover:bg-muted/40 animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:200ms] [animation-fill-mode:backwards]"
+      >
+        <span className="flex items-center gap-3">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <History className="size-4" strokeWidth={1.75} />
+          </span>
+          <span className="flex flex-col">
+            <span className="text-sm font-medium">Lịch sử quyết toán</span>
+            <span className="text-xs text-muted-foreground">
+              {history.length} đợt đã chốt · xem chi tiết từng đợt
+            </span>
+          </span>
+        </span>
+        <ChevronRight className="size-4 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5" />
+      </Link>
     </div>
   );
 }
