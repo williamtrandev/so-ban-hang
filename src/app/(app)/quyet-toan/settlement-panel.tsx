@@ -62,32 +62,32 @@ export function SettlementPanel({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="flex flex-col gap-2 rounded-lg bg-muted/50 p-4">
+    <div className="flex flex-col gap-4">
+      <dl className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="flex flex-col gap-1.5 rounded-lg bg-muted/50 p-3">
           <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Wallet className="size-3.5" strokeWidth={1.75} />
+            <Wallet className="size-3.5 max-sm:hidden" strokeWidth={1.75} />
             Tiền gốc
           </dt>
-          <dd className="text-xl font-semibold tabular-nums">
+          <dd className="text-sm font-semibold tabular-nums sm:text-xl">
             <AnimatedNumber value={totals.tienGoc} formatter={formatVnd} />
           </dd>
         </div>
-        <div className="flex flex-col gap-2 rounded-lg bg-muted/50 p-4">
+        <div className="flex flex-col gap-1.5 rounded-lg bg-muted/50 p-3">
           <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <ShoppingBag className="size-3.5" strokeWidth={1.75} />
+            <ShoppingBag className="size-3.5 max-sm:hidden" strokeWidth={1.75} />
             Tiền bán
           </dt>
-          <dd className="text-xl font-semibold tabular-nums">
+          <dd className="text-sm font-semibold tabular-nums sm:text-xl">
             <AnimatedNumber value={totals.tienBan} formatter={formatVnd} />
           </dd>
         </div>
-        <div className="flex flex-col gap-2 rounded-lg bg-primary/10 p-4 ring-1 ring-primary/20">
+        <div className="flex flex-col gap-1.5 rounded-lg bg-primary/10 p-3 ring-1 ring-primary/20">
           <dt className="flex items-center gap-1.5 text-xs font-medium text-primary">
-            <TrendingUp className="size-3.5" strokeWidth={1.75} />
+            <TrendingUp className="size-3.5 max-sm:hidden" strokeWidth={1.75} />
             Tiền lời
           </dt>
-          <dd className="text-xl font-semibold tabular-nums text-primary">
+          <dd className="text-sm font-semibold tabular-nums text-primary sm:text-xl">
             <AnimatedNumber value={totals.tienLoi} formatter={formatVnd} />
           </dd>
         </div>
@@ -99,7 +99,7 @@ export function SettlementPanel({
           Theo người bán
           <span className="text-xs font-normal text-muted-foreground">({sellerBreakdown.length})</span>
         </h3>
-        <div className="max-h-72 overflow-y-auto rounded-lg border border-border/60">
+        <div className="max-h-56 overflow-y-auto rounded-lg border border-border/60">
           <SellerBreakdownTable rows={sellerBreakdown} />
         </div>
       </div>

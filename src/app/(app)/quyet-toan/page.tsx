@@ -80,7 +80,7 @@ export default async function QuyetToanPage() {
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:gap-5">
       <header className="flex items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
@@ -102,13 +102,13 @@ export default async function QuyetToanPage() {
         </Link>
       </header>
 
-      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
         {allTimeStats.map((s, i) => (
           <div
             key={s.label}
-            className={`flex items-center gap-3 rounded-xl p-4 ring-1 animate-in fade-in slide-in-from-bottom-2 ${
+            className={`flex items-center gap-3 rounded-xl p-3.5 ring-1 animate-in fade-in slide-in-from-bottom-2 ${
               s.highlight
-                ? "bg-gradient-to-br from-primary/15 to-primary/5 ring-primary/20"
+                ? "col-span-2 bg-gradient-to-br from-primary/15 to-primary/5 ring-primary/20 sm:col-span-1"
                 : "bg-card ring-foreground/10"
             }`}
             style={{
@@ -120,7 +120,7 @@ export default async function QuyetToanPage() {
               className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
                 s.highlight
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
+                  : "bg-muted text-muted-foreground max-sm:hidden"
               }`}
             >
               <s.icon className="size-4" strokeWidth={1.75} />
@@ -136,7 +136,7 @@ export default async function QuyetToanPage() {
                 {s.label}
               </dt>
               <dd
-                className={`truncate text-lg font-semibold tabular-nums ${s.highlight ? "text-primary" : ""}`}
+                className={`truncate text-base font-semibold tabular-nums sm:text-lg ${s.highlight ? "text-primary" : ""}`}
               >
                 {s.value}
               </dd>
@@ -150,7 +150,7 @@ export default async function QuyetToanPage() {
         ))}
       </dl>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12 xl:items-start">
+      <div className="grid grid-cols-1 gap-4 md:gap-5 xl:grid-cols-12 xl:items-start">
         <Card className="xl:col-span-7 animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
           <CardHeader>
             <CardTitle>Quyết toán đợt hiện tại</CardTitle>

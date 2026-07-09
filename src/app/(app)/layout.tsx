@@ -22,7 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-[100dvh] flex-1 flex-col">
       <NavBar fullName={profile?.full_name ?? user.email ?? ""} role={profile?.role ?? "seller"} />
-      <main className="flex-1 animate-in px-4 pt-10 pb-8 fade-in slide-in-from-bottom-2 duration-500 md:px-6 md:pt-12">
+      <main className="flex-1 animate-in px-4 pt-6 pb-8 fade-in slide-in-from-bottom-2 duration-500 md:px-6 md:pt-8">
         {children}
       </main>
     </div>
