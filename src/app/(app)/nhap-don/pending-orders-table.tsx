@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusToggle } from "./status-toggle";
+import { SoLuongChips } from "@/components/soluong-chips";
 import {
   formatVnd,
   formatDateTime,
@@ -139,6 +140,7 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
   const { orders, currentUserId } = useOrders();
   const [search, setSearch] = useState("");
   const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(new Set());
+  const [sellerFilter, setSellerFilter] = useState<string | null>(null);
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
 
   function toggleFilter(filter: StatusFilter) {
@@ -150,15 +152,29 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
     });
   }
 
+  // Người tạo có mặt trong đợt (distinct theo seller_id), mình đứng đầu.
+  const sellers = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const o of orders) {
+      if (!map.has(o.seller_id)) map.set(o.seller_id, o.profiles?.full_name ?? "Không rõ");
+    }
+    return Array.from(map, ([id, name]) => ({ id, name })).sort(
+      (a, b) =>
+        Number(b.id === currentUserId) - Number(a.id === currentUserId) ||
+        a.name.localeCompare(b.name, "vi"),
+    );
+  }, [orders, currentUserId]);
+
   const filteredOrders = useMemo(() => {
     const q = search.trim().toLowerCase();
     return orders.filter((o) => {
       if (q && !o.ten_nguoi_mua.toLowerCase().includes(q)) return false;
       if (statusFilters.has("chua_thanh_toan") && o.da_thanh_toan) return false;
       if (statusFilters.has("chua_giao") && o.da_giao) return false;
+      if (sellerFilter && o.seller_id !== sellerFilter) return false;
       return true;
     });
-  }, [orders, search, statusFilters]);
+  }, [orders, search, statusFilters, sellerFilter]);
 
   if (orders.length === 0) {
     return (
@@ -201,6 +217,21 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
           </FilterChip>
         </div>
       </div>
+
+      {sellers.length > 1 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+          <span className="shrink-0 text-xs text-muted-foreground">Người tạo:</span>
+          {sellers.map((s) => (
+            <FilterChip
+              key={s.id}
+              active={sellerFilter === s.id}
+              onClick={() => setSellerFilter((prev) => (prev === s.id ? null : s.id))}
+            >
+              {s.id === currentUserId ? `${s.name} (bạn)` : s.name}
+            </FilterChip>
+          ))}
+        </div>
+      )}
 
       {filteredOrders.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/40 p-8 text-center">
@@ -295,29 +326,8 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
       )}
 
       <div className="flex flex-col gap-2 border-t border-border/60 pt-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
-          <span>
-            Nem <span className="font-medium text-foreground tabular-nums">{productTotals.nemTong}</span>{" "}
-            <span className="text-xs tabular-nums">
-              (ăn liền: lá {productTotals.so_luong_nem_an_lien_la}, hộp{" "}
-              {productTotals.so_luong_nem_an_lien_hop}; mới: lá {productTotals.so_luong_nem_moi_la}, hộp{" "}
-              {productTotals.so_luong_nem_moi_hop})
-            </span>
-          </span>
-          <span>
-            Bì <span className="font-medium text-foreground tabular-nums">{productTotals.biTong}</span>{" "}
-            <span className="text-xs tabular-nums">
-              (lá {productTotals.so_luong_bi_la}, hộp {productTotals.so_luong_bi_hop})
-            </span>
-          </span>
-          <span>
-            Chả{" "}
-            <span className="font-medium text-foreground tabular-nums">
-              {productTotals.so_luong_cha}
-            </span>
-          </span>
-        </div>
-        <p className="text-muted-foreground sm:text-right">
+        <SoLuongChips q={productTotals} />
+        <p className="shrink-0 text-muted-foreground sm:text-right">
           Tổng {totals.soLuongTong} phần · dự kiến bán{" "}
           <span className="font-medium text-foreground tabular-nums">{formatVnd(totals.tienBan)}</span>
         </p>

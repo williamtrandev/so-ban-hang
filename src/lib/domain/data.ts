@@ -36,12 +36,12 @@ export async function getPendingOrders(supabase: SupabaseClient): Promise<OrderR
   return data as OrderRow[];
 }
 
+// Lấy toàn bộ (1 dòng/đợt, bảng nhỏ): vừa hiển thị lịch sử vừa tính tổng doanh thu.
 export async function getSettlementHistory(supabase: SupabaseClient): Promise<SettlementRow[]> {
   const { data, error } = await supabase
     .from("settlements")
     .select("*")
-    .order("closed_at", { ascending: false })
-    .limit(20);
+    .order("closed_at", { ascending: false });
 
   if (error) throw error;
   return data as SettlementRow[];
