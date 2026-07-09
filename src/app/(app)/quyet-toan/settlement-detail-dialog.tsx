@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { SoLuongChips } from "@/components/soluong-chips";
 import { SellerBreakdownTable } from "./seller-breakdown-table";
 import {
   formatVnd,
@@ -71,24 +72,28 @@ export function SettlementDetailDialog({
               {(() => {
                 const pt = calcProductTotals(orders);
                 return (
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
-                    <span>
-                      Nem <span className="font-medium text-foreground tabular-nums">{pt.nemTong}</span>{" "}
-                      <span className="text-xs tabular-nums">
-                        (ăn liền: lá {pt.so_luong_nem_an_lien_la}, hộp {pt.so_luong_nem_an_lien_hop};
-                        mới: lá {pt.so_luong_nem_moi_la}, hộp {pt.so_luong_nem_moi_hop})
+                  <div className="flex flex-col gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+                    <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                      <span>
+                        Nem{" "}
+                        <span className="font-semibold text-foreground tabular-nums">
+                          {pt.nemTong}
+                        </span>
                       </span>
-                    </span>
-                    <span>
-                      Bì <span className="font-medium text-foreground tabular-nums">{pt.biTong}</span>{" "}
-                      <span className="text-xs tabular-nums">
-                        (lá {pt.so_luong_bi_la}, hộp {pt.so_luong_bi_hop})
+                      <span>
+                        Bì{" "}
+                        <span className="font-semibold text-foreground tabular-nums">
+                          {pt.biTong}
+                        </span>
                       </span>
-                    </span>
-                    <span>
-                      Chả{" "}
-                      <span className="font-medium text-foreground tabular-nums">{pt.so_luong_cha}</span>
-                    </span>
+                      <span>
+                        Chả{" "}
+                        <span className="font-semibold text-foreground tabular-nums">
+                          {pt.so_luong_cha}
+                        </span>
+                      </span>
+                    </div>
+                    <SoLuongChips q={pt} />
                   </div>
                 );
               })()}
