@@ -62,8 +62,8 @@ export function SettlementPanel({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <dl className="grid grid-cols-3 gap-2 sm:gap-3">
+    <div className="flex flex-col gap-4 xl:min-h-0 xl:flex-1">
+      <dl className="grid shrink-0 grid-cols-3 gap-2 sm:gap-3">
         <div className="flex flex-col gap-1.5 rounded-lg bg-muted/50 p-3">
           <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Wallet className="size-3.5 max-sm:hidden" strokeWidth={1.75} />
@@ -93,18 +93,18 @@ export function SettlementPanel({
         </div>
       </dl>
 
-      <div className="flex flex-col gap-2">
-        <h3 className="flex items-center gap-1.5 text-sm font-medium">
+      <div className="flex flex-col gap-2 xl:min-h-0 xl:flex-1">
+        <h3 className="flex shrink-0 items-center gap-1.5 text-sm font-medium">
           <Users className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
           Theo người bán
           <span className="text-xs font-normal text-muted-foreground">({sellerBreakdown.length})</span>
         </h3>
-        <div className="max-h-56 overflow-y-auto rounded-lg border border-border/60">
+        <div className="max-h-56 overflow-y-auto rounded-lg border border-border/60 xl:max-h-none xl:min-h-0 xl:flex-1">
           <SellerBreakdownTable rows={sellerBreakdown} />
         </div>
       </div>
 
-      <Button type="button" onClick={() => setConfirmOpen(true)} className="w-full sm:w-auto">
+      <Button type="button" onClick={() => setConfirmOpen(true)} className="w-full shrink-0 sm:w-auto">
         <CheckCircle2 />
         Quyết toán {pendingCount} đơn
       </Button>

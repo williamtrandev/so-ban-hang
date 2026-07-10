@@ -80,8 +80,10 @@ export default async function QuyetToanPage() {
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:gap-5">
-      <header className="flex items-end justify-between gap-3">
+    // xl: trang khoá đúng chiều cao viewport (trừ navbar + padding main), list dài
+    // scroll bên trong card thay vì scroll cả trang.
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:gap-5 xl:h-[calc(100dvh-7.5rem)]">
+      <header className="flex shrink-0 items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
             Quyết toán
@@ -102,7 +104,7 @@ export default async function QuyetToanPage() {
         </Link>
       </header>
 
-      <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+      <dl className="grid shrink-0 grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
         {allTimeStats.map((s, i) => (
           <div
             key={s.label}
@@ -150,12 +152,12 @@ export default async function QuyetToanPage() {
         ))}
       </dl>
 
-      <div className="grid grid-cols-1 gap-4 md:gap-5 xl:grid-cols-12 xl:items-start">
-        <Card className="xl:col-span-7 animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
+      <div className="grid grid-cols-1 gap-4 md:gap-5 xl:min-h-0 xl:flex-1 xl:grid-cols-12 xl:items-stretch">
+        <Card className="xl:col-span-7 xl:flex xl:min-h-0 xl:flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
           <CardHeader>
             <CardTitle>Quyết toán đợt hiện tại</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
             <SettlementPanel
               totals={totals}
               pendingCount={pendingOrders.length}
@@ -166,14 +168,14 @@ export default async function QuyetToanPage() {
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-5 animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:100ms] [animation-fill-mode:backwards]">
+        <Card className="xl:col-span-5 xl:flex xl:min-h-0 xl:flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:100ms] [animation-fill-mode:backwards]">
           <CardHeader>
             <CardTitle>Doanh thu theo người bán</CardTitle>
             <CardDescription>
               Toàn thời gian, gồm cả đợt đang bán.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
             {allTimeBySeller.length === 0 ? (
               <p className="text-sm text-muted-foreground">Chưa có đơn nào.</p>
             ) : (
