@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode, Copy, Check, CheckCircle2, Landmark } from "lucide-react";
+import { QrCode, Copy, Check, CheckCircle2, Landmark, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -61,6 +61,7 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
   };
   const bankOk = hasBank(pay);
   const bank = bankByBin(pay.bank_bin);
+  const isMomo = pay.bank_bin === "971025";
 
   return (
     <>
@@ -115,11 +116,22 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
                 />
               </div>
               <p className="text-center text-xs text-muted-foreground">
-                Quét bằng app ngân hàng hoặc MoMo (VietQR)
+                {isMomo
+                  ? "Quét bằng app ngân hàng để chuyển vào ví MoMo"
+                  : "Quét bằng app ngân hàng hoặc MoMo (VietQR)"}
               </p>
+              {isMomo && (
+                <p className="flex items-start gap-1.5 rounded-md bg-primary/8 px-3 py-2 text-xs text-muted-foreground">
+                  <Info className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                  <span>
+                    Người mua dùng app <span className="font-medium text-foreground">MoMo</span> thì
+                    chuyển thẳng tới SĐT bên dưới, không quét mã này.
+                  </span>
+                </p>
+              )}
               <div className="flex flex-col gap-1.5">
                 <CopyRow
-                  label={bank ? `Ngân hàng · ${bank.short}` : "Số tài khoản"}
+                  label={isMomo ? "SĐT MoMo" : bank ? `Ngân hàng · ${bank.short}` : "Số tài khoản"}
                   value={pay.bank_account!}
                 />
                 {pay.bank_account_name && (
