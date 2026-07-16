@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusToggle } from "./status-toggle";
+import { PaymentQrButton } from "./payment-qr-dialog";
 import { SoLuongChips } from "@/components/soluong-chips";
 import {
   formatVnd,
@@ -258,7 +259,10 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
                       {order.profiles?.full_name ?? "—"} · {formatDateTime(order.created_at)}
                     </span>
                   </div>
-                  <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
+                  <div className="flex gap-1">
+                    {!order.id.startsWith(TMP_PREFIX) && <PaymentQrButton order={order} />}
+                    <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
+                  </div>
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm text-muted-foreground tabular-nums">{soLuongLabel(order)}</span>
@@ -282,7 +286,7 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
                   <TableHead>Ghi chú</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead className="text-right">Tiền bán</TableHead>
-                  <TableHead className="w-10" />
+                  <TableHead className="w-20" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -315,7 +319,10 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
                       {formatVnd(orderTienBan(order))}
                     </TableCell>
                     <TableCell>
-                      <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
+                      <div className="flex gap-1">
+                        {!order.id.startsWith(TMP_PREFIX) && <PaymentQrButton order={order} />}
+                        <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
