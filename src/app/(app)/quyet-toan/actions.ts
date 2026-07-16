@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getPendingOrders } from "@/lib/domain/data";
-import { calcTotals } from "@/lib/domain/types";
+import { calcTotals, currentRound } from "@/lib/domain/types";
 
 export interface CloseSettlementState {
   error: string | null;
@@ -20,7 +20,10 @@ export async function closeSettlement(): Promise<CloseSettlementState> {
   const pending = await getPendingOrders(supabase);
   if (pending.length === 0) return { error: "Không có đơn nào để quyết toán.", settledAt: null };
 
-  const totals = calcTotals(pending);
+  // Chỉ chốt đợt hiện tại (dot nhỏ nhất); đơn đợt kế tiếp giữ nguyên.
+  const round = currentRound(pending);
+  const current = pending.filter((o) => o.dot === round);
+  const totals = calcTotals(current);
 
   const { data: settlement, error: settlementError } = await supabase
     .from("settlements")
@@ -40,7 +43,8 @@ export async function closeSettlement(): Promise<CloseSettlementState> {
   const { error: updateError } = await supabase
     .from("orders")
     .update({ settlement_id: settlement.id })
-    .is("settlement_id", null);
+    .is("settlement_id", null)
+    .eq("dot", round);
 
   if (updateError) return { error: updateError.message, settledAt: null };
 

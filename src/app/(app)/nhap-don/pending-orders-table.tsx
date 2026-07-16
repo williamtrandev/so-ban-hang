@@ -138,7 +138,9 @@ function FilterChip({
 }
 
 export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Price> }) {
-  const { orders, currentUserId } = useOrders();
+  const { orders: allOrders, currentUserId, selectedDot, viewNext } = useOrders();
+  // Chỉ đơn thuộc đợt đang xem (hiện tại / kế tiếp).
+  const orders = useMemo(() => allOrders.filter((o) => o.dot === selectedDot), [allOrders, selectedDot]);
   const [search, setSearch] = useState("");
   const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(new Set());
   const [sellerFilter, setSellerFilter] = useState<string | null>(null);
@@ -182,7 +184,8 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
       <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/40 p-10 text-center">
         <ReceiptText className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
         <p className="text-sm text-muted-foreground">
-          Chưa có đơn nào trong đợt này. Dùng &quot;Nhập nhanh&quot; ở trên để bắt đầu.
+          Chưa có đơn nào trong đợt {viewNext ? "kế tiếp" : "này"}. Dùng &quot;Nhập nhanh&quot; ở trên
+          để bắt đầu.
         </p>
       </div>
     );

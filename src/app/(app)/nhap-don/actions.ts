@@ -6,6 +6,16 @@ import { getCurrentPrices } from "@/lib/domain/data";
 import { SOLUONG_LEAVES, zeroSoLuong, type SoLuong } from "@/lib/domain/types";
 import { parseBulkOrders } from "./parse";
 
+// Số đợt cho đơn mới: đợt hiện tại (min dot đơn chưa quyết toán) + 1 nếu là đợt kế tiếp.
+async function resolveDot(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  nextBatch: boolean,
+): Promise<number> {
+  const { data } = await supabase.from("orders").select("dot").is("settlement_id", null);
+  const cur = data && data.length ? Math.min(...data.map((r) => r.dot as number)) : 0;
+  return cur + (nextBatch ? 1 : 0);
+}
+
 // Đọc 7 trường số lượng từ form. Trả null nếu có trường không hợp lệ hoặc tất cả = 0.
 function readSoLuong(formData: FormData): SoLuong | null {
   const q = zeroSoLuong();
@@ -39,6 +49,8 @@ export async function createOrder(_prevState: string | null, formData: FormData)
   const cha = prices.cha;
   if (!nemBi || !cha) return "Chưa có giá sản phẩm, liên hệ admin.";
 
+  const dot = await resolveDot(supabase, formData.get("next_batch") === "on");
+
   const { error } = await supabase.from("orders").insert({
     seller_id: user.id,
     ten_nguoi_mua: tenNguoiMua,
@@ -46,6 +58,7 @@ export async function createOrder(_prevState: string | null, formData: FormData)
     ghi_chu: ghiChu || null,
     da_thanh_toan: daThanhToan,
     da_giao: daGiao,
+    dot,
     gia_goc_nem_bi_snap: nemBi.gia_goc,
     gia_ban_nem_bi_snap: nemBi.gia_ban,
     gia_goc_cha_snap: cha.gia_goc,
@@ -84,6 +97,8 @@ export async function createBulkOrders(
   const cha = prices.cha;
   if (!nemBi || !cha) return "Chưa có giá sản phẩm, liên hệ admin.";
 
+  const dot = await resolveDot(supabase, formData.get("next_batch") === "on");
+
   const rows = parsed.map((r) => {
     // Ép narrow: mọi phần tử ở đây đều ok (đã return ở firstError).
     const o = (r as Extract<typeof r, { ok: true }>).order;
@@ -95,6 +110,7 @@ export async function createBulkOrders(
       ghi_chu,
       da_thanh_toan,
       da_giao,
+      dot,
       gia_goc_nem_bi_snap: nemBi.gia_goc,
       gia_ban_nem_bi_snap: nemBi.gia_ban,
       gia_goc_cha_snap: cha.gia_goc,

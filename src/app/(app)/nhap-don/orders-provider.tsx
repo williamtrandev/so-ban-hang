@@ -1,7 +1,14 @@
 "use client";
 
-import { createContext, useContext, useOptimistic, type ReactNode } from "react";
-import type { OrderRow, Price, PriceGroup } from "@/lib/domain/types";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useOptimistic,
+  useState,
+  type ReactNode,
+} from "react";
+import { currentRound, type OrderRow, type Price, type PriceGroup } from "@/lib/domain/types";
 import type { ParsedOrder } from "./parse";
 
 export const TMP_PREFIX = "tmp-";
@@ -12,6 +19,12 @@ type OrdersContextValue = {
   orders: OrderRow[];
   currentUserId: string;
   apply: (action: OptimisticAction) => void;
+  // Quản lý đợt: đang xem/nhập đợt hiện tại hay đợt kế tiếp.
+  currentRound: number;
+  selectedDot: number;
+  viewNext: boolean;
+  setViewNext: (next: boolean) => void;
+  hasNext: boolean;
 };
 
 const OrdersContext = createContext<OrdersContextValue | null>(null);
@@ -21,6 +34,7 @@ export function toOptimisticOrder(
   o: ParsedOrder,
   sellerId: string,
   prices: Record<PriceGroup, Price>,
+  dot: number,
 ): OrderRow {
   return {
     id: `${TMP_PREFIX}${crypto.randomUUID()}`,
@@ -41,6 +55,7 @@ export function toOptimisticOrder(
     gia_goc_cha_snap: prices.cha?.gia_goc ?? 0,
     gia_ban_cha_snap: prices.cha?.gia_ban ?? 0,
     settlement_id: null,
+    dot,
     created_at: new Date().toISOString(),
     profiles: { full_name: "Bạn" },
   };
@@ -62,9 +77,28 @@ export function OrdersProvider({
       return state.filter((o) => o.id !== action.id);
     },
   );
+  const [viewNext, setViewNext] = useState(false);
+
+  const round = currentRound(optimisticOrders);
+  const selectedDot = round + (viewNext ? 1 : 0);
+  const hasNext = useMemo(
+    () => optimisticOrders.some((o) => o.dot > round),
+    [optimisticOrders, round],
+  );
 
   return (
-    <OrdersContext.Provider value={{ orders: optimisticOrders, currentUserId, apply }}>
+    <OrdersContext.Provider
+      value={{
+        orders: optimisticOrders,
+        currentUserId,
+        apply,
+        currentRound: round,
+        selectedDot,
+        viewNext,
+        setViewNext,
+        hasNext,
+      }}
+    >
       {children}
     </OrdersContext.Provider>
   );

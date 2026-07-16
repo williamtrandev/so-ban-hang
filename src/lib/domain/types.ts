@@ -54,6 +54,7 @@ export interface OrderRow extends SoLuong {
   gia_goc_cha_snap: number;
   gia_ban_cha_snap: number;
   settlement_id: string | null;
+  dot: number;
   created_at: string;
   profiles?: {
     full_name: string;
@@ -95,6 +96,13 @@ export function orderTienGoc(o: OrderRow): number {
     (orderSoLuongNem(o) + orderSoLuongBi(o)) * o.gia_goc_nem_bi_snap +
     o.so_luong_cha * o.gia_goc_cha_snap
   );
+}
+
+// Đợt hiện tại = số đợt nhỏ nhất trong các đơn chưa quyết toán (0 nếu chưa có đơn).
+// Đơn có dot lớn hơn là đợt kế tiếp (đang chờ, chưa tới lượt chốt).
+export function currentRound(pending: OrderRow[]): number {
+  if (pending.length === 0) return 0;
+  return Math.min(...pending.map((o) => o.dot));
 }
 
 export function calcTotals(orders: OrderRow[]): SettlementTotals {

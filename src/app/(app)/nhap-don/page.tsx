@@ -1,11 +1,12 @@
 import { ReceiptText, Banknote, Wallet, Truck, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPrices, getPendingOrders } from "@/lib/domain/data";
-import { calcTotals, formatVnd } from "@/lib/domain/types";
+import { calcTotals, currentRound, formatVnd } from "@/lib/domain/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PendingOrdersTable } from "./pending-orders-table";
 import { QuickInputTabs } from "./quick-input-tabs";
 import { OrdersProvider } from "./orders-provider";
+import { RoundSwitcher } from "./round-switcher";
 
 export default async function NhapDonPage() {
   const supabase = await createClient();
@@ -18,12 +19,15 @@ export default async function NhapDonPage() {
     getPendingOrders(supabase),
   ]);
 
-  const totals = calcTotals(orders);
-  const chuaThanhToan = orders.filter((o) => !o.da_thanh_toan).length;
-  const chuaGiao = orders.filter((o) => !o.da_giao).length;
+  // Thống kê chỉ tính đợt hiện tại (đơn đợt kế tiếp chưa tới lượt chốt).
+  const round = currentRound(orders);
+  const currentOrders = orders.filter((o) => o.dot === round);
+  const totals = calcTotals(currentOrders);
+  const chuaThanhToan = currentOrders.filter((o) => !o.da_thanh_toan).length;
+  const chuaGiao = currentOrders.filter((o) => !o.da_giao).length;
 
   const stats = [
-    { icon: ReceiptText, label: "Số đơn", value: String(orders.length) },
+    { icon: ReceiptText, label: "Số đơn", value: String(currentOrders.length) },
     { icon: Banknote, label: "Dự kiến bán", value: formatVnd(totals.tienBan), highlight: true },
     { icon: Wallet, label: "Chưa thanh toán", value: String(chuaThanhToan) },
     { icon: Truck, label: "Chưa giao", value: String(chuaGiao) },
@@ -77,6 +81,8 @@ export default async function NhapDonPage() {
       </dl>
 
       <OrdersProvider orders={orders} currentUserId={user!.id}>
+        <RoundSwitcher />
+
         <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

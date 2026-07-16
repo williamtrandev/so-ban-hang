@@ -17,7 +17,7 @@ import {
 } from "@/lib/domain/types";
 
 export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
-  const { apply, currentUserId } = useOrders();
+  const { apply, currentUserId, selectedDot, viewNext } = useOrders();
   const [error, formAction, pending] = useActionState(
     async (prev: string | null, formData: FormData) => {
       // Dispatch optimistic TRONG transition đang await server.
@@ -27,7 +27,12 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
         apply({
           type: "add",
           orders: ok.map((r) =>
-            toOptimisticOrder((r as Extract<typeof r, { ok: true }>).order, currentUserId, prices),
+            toOptimisticOrder(
+              (r as Extract<typeof r, { ok: true }>).order,
+              currentUserId,
+              prices,
+              selectedDot,
+            ),
           ),
         });
       }
@@ -73,6 +78,7 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-3">
+      <input type="hidden" name="next_batch" value={viewNext ? "on" : "off"} />
       <Textarea
         name="bulk_text"
         rows={5}

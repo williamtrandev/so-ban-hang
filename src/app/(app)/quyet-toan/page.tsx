@@ -10,6 +10,7 @@ import {
 import {
   calcTotals,
   buildSellerBreakdown,
+  currentRound,
   formatVnd,
 } from "@/lib/domain/types";
 import {
@@ -42,8 +43,12 @@ export default async function QuyetToanPage() {
     getAllOrders(supabase),
   ]);
 
-  const totals = calcTotals(pendingOrders);
-  const sellerBreakdown = buildSellerBreakdown(pendingOrders);
+  // Chỉ quyết toán đợt hiện tại; đơn đợt kế tiếp chưa tới lượt chốt.
+  const round = currentRound(pendingOrders);
+  const currentPending = pendingOrders.filter((o) => o.dot === round);
+  const nextBatchCount = pendingOrders.length - currentPending.length;
+  const totals = calcTotals(currentPending);
+  const sellerBreakdown = buildSellerBreakdown(currentPending);
   // Doanh thu từng người toàn thời gian (mọi đơn, đã chốt + đang bán).
   const allTimeBySeller = buildSellerBreakdown(allOrders);
 
@@ -156,11 +161,16 @@ export default async function QuyetToanPage() {
         <Card className="xl:col-span-7 xl:flex xl:min-h-0 xl:flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
           <CardHeader>
             <CardTitle>Quyết toán đợt hiện tại</CardTitle>
+            {nextBatchCount > 0 && (
+              <CardDescription>
+                Còn {nextBatchCount} đơn ở đợt kế tiếp, sẽ không bị chốt lần này.
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
             <SettlementPanel
               totals={totals}
-              pendingCount={pendingOrders.length}
+              pendingCount={currentPending.length}
               isAdmin={profile?.role === "admin"}
               prices={prices}
               sellerBreakdown={sellerBreakdown}

@@ -17,13 +17,16 @@ import {
 } from "@/lib/domain/types";
 
 export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
-  const { apply, currentUserId } = useOrders();
+  const { apply, currentUserId, selectedDot, viewNext } = useOrders();
   const [error, formAction, pending] = useActionState(
     async (prev: string | null, formData: FormData) => {
       // Dispatch optimistic TRONG transition đang await server -> đơn giữ hiện tới khi xong.
       const r = parseBulkOrders(String(formData.get("bulk_text") ?? ""))[0];
       if (r?.ok) {
-        apply({ type: "add", orders: [toOptimisticOrder(r.order, currentUserId, prices)] });
+        apply({
+          type: "add",
+          orders: [toOptimisticOrder(r.order, currentUserId, prices, selectedDot)],
+        });
       }
       return createBulkOrders(prev, formData);
     },
@@ -62,6 +65,7 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-2">
+      <input type="hidden" name="next_batch" value={viewNext ? "on" : "off"} />
       <div className="flex items-center gap-2">
         <Input
           ref={inputRef}
