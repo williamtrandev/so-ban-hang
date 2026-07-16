@@ -6,7 +6,6 @@ export const TRANSFER_NOTE = "Chuyen tien do an";
 
 // Thông tin nhận tiền lưu trên profile của từng người bán.
 export interface PaymentInfo {
-  momo_phone: string | null;
   bank_bin: string | null;
   bank_account: string | null;
   bank_account_name: string | null;
@@ -19,7 +18,9 @@ export interface Bank {
 }
 
 // Danh sách ngân hàng phổ biến (mã BIN napas). Đủ dùng cho nhu cầu cá nhân.
+// MoMo là "ngân hàng" trên napas (BIN 971025), số tài khoản chính là số điện thoại.
 export const BANKS: Bank[] = [
+  { bin: "971025", short: "MoMo", name: "Ví MoMo — số tài khoản là SĐT" },
   { bin: "970436", short: "Vietcombank", name: "Ngoại thương Việt Nam (VCB)" },
   { bin: "970407", short: "Techcombank", name: "Kỹ Thương (TCB)" },
   { bin: "970418", short: "BIDV", name: "Đầu tư và Phát triển (BIDV)" },
@@ -53,10 +54,6 @@ export const BANKS: Bank[] = [
 export function bankByBin(bin: string | null): Bank | undefined {
   if (!bin) return undefined;
   return BANKS.find((b) => b.bin === bin);
-}
-
-export function hasMomo(p: PaymentInfo): boolean {
-  return !!p.momo_phone?.trim();
 }
 
 export function hasBank(p: PaymentInfo): boolean {
@@ -106,14 +103,4 @@ export function buildVietQr(args: {
 
   payload += "6304"; // id + len của CRC, tính checksum trên cả tiền tố này
   return payload + crc16(payload);
-}
-
-// MoMo là "ngân hàng" trên napas (BIN 971025), số tài khoản chính là số điện thoại.
-export const MOMO_BIN = "971025";
-
-// Từ 10/2025 MoMo nhận tiền qua VietQR như một ngân hàng napas. Mã này quét được
-// bằng cả app MoMo lẫn mọi app ngân hàng, không dính lỗi "ví chưa xác thực" như
-// chuỗi transfer_p2p (2|99|...) cũ.
-export function buildMomoQr(args: { phone: string; amount: number; note: string }): string {
-  return buildVietQr({ bin: MOMO_BIN, account: args.phone, amount: args.amount, note: args.note });
 }

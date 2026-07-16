@@ -11,7 +11,7 @@ export default async function CaiDatPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("momo_phone, bank_bin, bank_account, bank_account_name")
+    .select("bank_bin, bank_account, bank_account_name")
     .eq("id", user.id)
     .single();
 

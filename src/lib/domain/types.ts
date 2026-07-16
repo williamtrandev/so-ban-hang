@@ -57,7 +57,6 @@ export interface OrderRow extends SoLuong {
   created_at: string;
   profiles?: {
     full_name: string;
-    momo_phone?: string | null;
     bank_bin?: string | null;
     bank_account?: string | null;
     bank_account_name?: string | null;

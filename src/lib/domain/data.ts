@@ -28,9 +28,7 @@ export async function getCurrentPrices(supabase: SupabaseClient): Promise<Record
 export async function getPendingOrders(supabase: SupabaseClient): Promise<OrderRow[]> {
   const { data, error } = await supabase
     .from("orders")
-    .select(
-      "*, profiles(full_name, momo_phone, bank_bin, bank_account, bank_account_name)",
-    )
+    .select("*, profiles(full_name, bank_bin, bank_account, bank_account_name)")
     .is("settlement_id", null)
     .order("created_at", { ascending: false });
 
