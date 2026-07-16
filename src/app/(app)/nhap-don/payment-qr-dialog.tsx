@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode, Copy, Check, CheckCircle2 } from "lucide-react";
+import { QrCode, Copy, Check, CheckCircle2, Wallet, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,17 +11,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatVnd, orderTienBan, type OrderRow } from "@/lib/domain/types";
-
-// Số MoMo nhận tiền + nội dung chuyển khoản (để tránh bị cục thuế đánh dấu).
-const MOMO_PHONE = "0907640698";
-const TRANSFER_NOTE = "chuyển tiền đồ ăn";
-
-// Chuỗi QR chuyển tiền cá nhân của MoMo. App MoMo tự tra tên người nhận từ SĐT.
-// Định dạng: 2|99|<sđt>|<tên>|<email>|0|0|<số tiền>|<nội dung>|transfer_p2p
-function buildMomoQr(amount: number, note: string): string {
-  return `2|99|${MOMO_PHONE}|||0|0|${amount}|${note}|transfer_p2p`;
-}
+import {
+  TRANSFER_NOTE,
+  bankByBin,
+  buildMomoQr,
+  buildVietQr,
+  hasBank,
+  hasMomo,
+  type PaymentInfo,
+} from "@/lib/domain/payment";
 
 function CopyRow({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
@@ -52,10 +52,32 @@ function CopyRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function QrPanel({ value, hint, rows }: { value: string; hint: string; rows: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex justify-center rounded-lg bg-white p-4">
+        <QRCodeSVG value={value} size={200} level="M" marginSize={0} />
+      </div>
+      <p className="text-center text-xs text-muted-foreground">{hint}</p>
+      <div className="flex flex-col gap-1.5">{rows}</div>
+    </div>
+  );
+}
+
 export function PaymentQrButton({ order }: { order: OrderRow }) {
   const [open, setOpen] = useState(false);
   const amount = orderTienBan(order);
   const paid = order.da_thanh_toan;
+
+  const pay: PaymentInfo = {
+    momo_phone: order.profiles?.momo_phone ?? null,
+    bank_bin: order.profiles?.bank_bin ?? null,
+    bank_account: order.profiles?.bank_account ?? null,
+    bank_account_name: order.profiles?.bank_account_name ?? null,
+  };
+  const momoOk = hasMomo(pay);
+  const bankOk = hasBank(pay);
+  const bank = bankByBin(pay.bank_bin);
 
   return (
     <>
@@ -84,25 +106,72 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
               <CheckCircle2 className="size-10 text-primary" strokeWidth={1.5} />
               <p className="text-sm text-muted-foreground">Đơn này đã thanh toán.</p>
             </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-center rounded-lg bg-white p-4">
-                <QRCodeSVG
-                  value={buildMomoQr(amount, TRANSFER_NOTE)}
-                  size={200}
-                  level="M"
-                  marginSize={0}
-                />
-              </div>
-              <p className="text-center text-xs text-muted-foreground">
-                Quét bằng app MoMo để chuyển tiền
+          ) : !momoOk && !bankOk ? (
+            <div className="flex flex-col items-center gap-2 py-6 text-center">
+              <Wallet className="size-9 text-muted-foreground/60" strokeWidth={1.5} />
+              <p className="text-sm text-muted-foreground">
+                {order.profiles?.full_name ?? "Người tạo đơn"} chưa cấu hình nhận tiền.
+                <br />
+                Vào <span className="font-medium text-foreground">Cài đặt</span> để thêm MoMo /
+                tài khoản ngân hàng.
               </p>
-              <div className="flex flex-col gap-1.5">
-                <CopyRow label="Số MoMo" value={MOMO_PHONE} />
-                <CopyRow label="Số tiền" value={amount.toLocaleString("vi-VN")} />
-                <CopyRow label="Nội dung" value={TRANSFER_NOTE} />
-              </div>
             </div>
+          ) : (
+            <Tabs defaultValue={momoOk ? "momo" : "bank"} className="gap-4">
+              {momoOk && bankOk && (
+                <TabsList className="w-full">
+                  <TabsTrigger value="momo">
+                    <Wallet /> MoMo
+                  </TabsTrigger>
+                  <TabsTrigger value="bank">
+                    <Landmark /> Ngân hàng
+                  </TabsTrigger>
+                </TabsList>
+              )}
+
+              {momoOk && (
+                <TabsContent value="momo">
+                  <QrPanel
+                    value={buildMomoQr({ phone: pay.momo_phone!, amount, note: TRANSFER_NOTE })}
+                    hint="Quét bằng app MoMo để chuyển tiền"
+                    rows={
+                      <>
+                        <CopyRow label="Số MoMo" value={pay.momo_phone!} />
+                        <CopyRow label="Số tiền" value={amount.toLocaleString("vi-VN")} />
+                        <CopyRow label="Nội dung" value={TRANSFER_NOTE} />
+                      </>
+                    }
+                  />
+                </TabsContent>
+              )}
+
+              {bankOk && (
+                <TabsContent value="bank">
+                  <QrPanel
+                    value={buildVietQr({
+                      bin: pay.bank_bin!,
+                      account: pay.bank_account!,
+                      amount,
+                      note: TRANSFER_NOTE,
+                    })}
+                    hint="Quét bằng app ngân hàng bất kỳ (VietQR)"
+                    rows={
+                      <>
+                        <CopyRow
+                          label={bank ? `Ngân hàng · ${bank.short}` : "Số tài khoản"}
+                          value={pay.bank_account!}
+                        />
+                        {pay.bank_account_name && (
+                          <CopyRow label="Chủ tài khoản" value={pay.bank_account_name} />
+                        )}
+                        <CopyRow label="Số tiền" value={amount.toLocaleString("vi-VN")} />
+                        <CopyRow label="Nội dung" value={TRANSFER_NOTE} />
+                      </>
+                    }
+                  />
+                </TabsContent>
+              )}
+            </Tabs>
           )}
         </DialogContent>
       </Dialog>

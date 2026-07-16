@@ -55,7 +55,13 @@ export interface OrderRow extends SoLuong {
   gia_ban_cha_snap: number;
   settlement_id: string | null;
   created_at: string;
-  profiles?: { full_name: string } | null;
+  profiles?: {
+    full_name: string;
+    momo_phone?: string | null;
+    bank_bin?: string | null;
+    bank_account?: string | null;
+    bank_account_name?: string | null;
+  } | null;
 }
 
 export interface SettlementTotals {
