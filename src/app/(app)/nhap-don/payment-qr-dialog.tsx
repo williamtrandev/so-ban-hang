@@ -133,7 +133,7 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
                 <TabsContent value="momo">
                   <QrPanel
                     value={buildMomoQr({ phone: pay.momo_phone!, amount, note: TRANSFER_NOTE })}
-                    hint="Quét bằng app MoMo để chuyển tiền"
+                    hint="Quét bằng app MoMo hoặc app ngân hàng bất kỳ"
                     rows={
                       <>
                         <CopyRow label="Số MoMo" value={pay.momo_phone!} />

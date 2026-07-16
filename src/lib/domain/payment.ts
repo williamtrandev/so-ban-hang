@@ -108,8 +108,12 @@ export function buildVietQr(args: {
   return payload + crc16(payload);
 }
 
-// Chuỗi QR chuyển tiền cá nhân của MoMo (transfer_p2p).
-// Định dạng: 2|99|<sđt>|<tên>|<email>|0|0|<số tiền>|<nội dung>|transfer_p2p
+// MoMo là "ngân hàng" trên napas (BIN 971025), số tài khoản chính là số điện thoại.
+export const MOMO_BIN = "971025";
+
+// Từ 10/2025 MoMo nhận tiền qua VietQR như một ngân hàng napas. Mã này quét được
+// bằng cả app MoMo lẫn mọi app ngân hàng, không dính lỗi "ví chưa xác thực" như
+// chuỗi transfer_p2p (2|99|...) cũ.
 export function buildMomoQr(args: { phone: string; amount: number; note: string }): string {
-  return `2|99|${args.phone}|||0|0|${args.amount}|${args.note}|transfer_p2p`;
+  return buildVietQr({ bin: MOMO_BIN, account: args.phone, amount: args.amount, note: args.note });
 }
