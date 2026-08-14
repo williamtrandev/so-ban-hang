@@ -2,7 +2,7 @@
 // Nội dung mặc định để không diacritic cho chắc chắn app quét được (memo ngân hàng
 // vốn cũng bỏ dấu). Cấu hình nhận tiền lấy theo người bán tạo đơn, không cố định.
 
-export const TRANSFER_NOTE = "Chuyen tien do an";
+export const TRANSFER_NOTE = "Gui tien an uong";
 
 // Thông tin nhận tiền lưu trên profile của từng người bán.
 export interface PaymentInfo {
