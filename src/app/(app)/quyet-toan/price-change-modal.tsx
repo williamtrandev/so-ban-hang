@@ -13,10 +13,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { type Price, type PriceGroup } from "@/lib/domain/types";
+import { PRICE_GROUPS, type Price, type PriceGroup } from "@/lib/domain/types";
 import { toast } from "sonner";
 
 const initialState: UpdatePricesState = { error: null, saved: false };
+
+// Mỗi nhóm giá 1 khối "giá gốc / giá bán". Giá mặc định dùng khi chưa có giá cũ.
+// Kiểu Record ép form luôn có đủ mọi nhóm (server từ chối nếu thiếu ô nào).
+const PRICE_FIELDS: Record<PriceGroup, { label: string; goc: number; ban: number }> = {
+  nem_bi: { label: "Nem / Bì", goc: 25000, ban: 35000 },
+  cha: { label: "Chả lụa", goc: 80000, ban: 100000 },
+  chuoi_chien: { label: "Chuối chiên", goc: 20000, ban: 25000 },
+  khoai_lang_chien: { label: "Khoai lang chiên", goc: 30000, ban: 35000 },
+};
 
 export function PriceChangeModal({
   open,
@@ -44,68 +53,41 @@ export function PriceChangeModal({
           <DialogTitle>Đợt mới: có đổi giá không?</DialogTitle>
           <DialogDescription>
             Vừa quyết toán xong. Xác nhận giá áp dụng cho đợt tiếp theo, hoặc sửa lại nếu cần đổi
-            giá nem, bì, chả.
+            giá từng loại.
           </DialogDescription>
         </DialogHeader>
         <form action={formAction} className="flex flex-col gap-5">
-          <fieldset className="flex flex-col gap-3">
-            <legend className="text-sm font-medium">Nem / Bì</legend>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="gia_goc_nem_bi">Giá gốc</Label>
-                <Input
-                  id="gia_goc_nem_bi"
-                  name="gia_goc_nem_bi"
-                  type="number"
-                  min={0}
-                  step={500}
-                  defaultValue={prices.nem_bi?.gia_goc ?? 25000}
-                  required
-                />
+          {PRICE_GROUPS.map((g) => (
+            <fieldset key={g} className="flex flex-col gap-3">
+              <legend className="text-sm font-medium">{PRICE_FIELDS[g].label}</legend>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`gia_goc_${g}`}>Giá gốc</Label>
+                  <Input
+                    id={`gia_goc_${g}`}
+                    name={`gia_goc_${g}`}
+                    type="number"
+                    min={0}
+                    step={500}
+                    defaultValue={prices[g]?.gia_goc ?? PRICE_FIELDS[g].goc}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`gia_ban_${g}`}>Giá bán</Label>
+                  <Input
+                    id={`gia_ban_${g}`}
+                    name={`gia_ban_${g}`}
+                    type="number"
+                    min={0}
+                    step={500}
+                    defaultValue={prices[g]?.gia_ban ?? PRICE_FIELDS[g].ban}
+                    required
+                  />
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="gia_ban_nem_bi">Giá bán</Label>
-                <Input
-                  id="gia_ban_nem_bi"
-                  name="gia_ban_nem_bi"
-                  type="number"
-                  min={0}
-                  step={500}
-                  defaultValue={prices.nem_bi?.gia_ban ?? 35000}
-                  required
-                />
-              </div>
-            </div>
-          </fieldset>
-          <fieldset className="flex flex-col gap-3">
-            <legend className="text-sm font-medium">Chả lụa</legend>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="gia_goc_cha">Giá gốc</Label>
-                <Input
-                  id="gia_goc_cha"
-                  name="gia_goc_cha"
-                  type="number"
-                  min={0}
-                  step={500}
-                  defaultValue={prices.cha?.gia_goc ?? 80000}
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="gia_ban_cha">Giá bán</Label>
-                <Input
-                  id="gia_ban_cha"
-                  name="gia_ban_cha"
-                  type="number"
-                  min={0}
-                  step={500}
-                  defaultValue={prices.cha?.gia_ban ?? 100000}
-                  required
-                />
-              </div>
-            </div>
-          </fieldset>
+            </fieldset>
+          ))}
           {state.error && <p className="text-sm text-destructive">{state.error}</p>}
           <DialogFooter className="gap-2 sm:gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

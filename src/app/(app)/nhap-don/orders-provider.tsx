@@ -8,7 +8,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { currentRound, type OrderRow, type Price, type PriceGroup } from "@/lib/domain/types";
+import {
+  currentRound,
+  priceSnapshot,
+  type OrderRow,
+  type Price,
+  type PriceGroup,
+} from "@/lib/domain/types";
 import type { ParsedOrder } from "./parse";
 
 export const TMP_PREFIX = "tmp-";
@@ -47,13 +53,12 @@ export function toOptimisticOrder(
     so_luong_bi_la: o.so_luong_bi_la,
     so_luong_bi_hop: o.so_luong_bi_hop,
     so_luong_cha: o.so_luong_cha,
+    so_luong_chuoi_chien: o.so_luong_chuoi_chien,
+    so_luong_khoai_lang_chien: o.so_luong_khoai_lang_chien,
     ghi_chu: o.ghi_chu,
     da_thanh_toan: o.da_thanh_toan,
     da_giao: o.da_giao,
-    gia_goc_nem_bi_snap: prices.nem_bi?.gia_goc ?? 0,
-    gia_ban_nem_bi_snap: prices.nem_bi?.gia_ban ?? 0,
-    gia_goc_cha_snap: prices.cha?.gia_goc ?? 0,
-    gia_ban_cha_snap: prices.cha?.gia_ban ?? 0,
+    ...priceSnapshot(prices),
     settlement_id: null,
     dot,
     created_at: new Date().toISOString(),

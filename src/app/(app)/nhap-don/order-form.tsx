@@ -10,9 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import {
+  SOLUONG_LEAVES,
   formatVnd,
-  orderSoLuongNem,
-  orderSoLuongBi,
+  tienBanTheoGia,
   zeroSoLuong,
   type OrderRow,
   type Price,
@@ -21,16 +21,6 @@ import {
 } from "@/lib/domain/types";
 
 type QtyKey = keyof SoLuong;
-
-const QUANTITY_FIELDS: { key: QtyKey; label: string; group: PriceGroup }[] = [
-  { key: "so_luong_nem_an_lien_la", label: "Nem ăn liền lá", group: "nem_bi" },
-  { key: "so_luong_nem_an_lien_hop", label: "Nem ăn liền hộp", group: "nem_bi" },
-  { key: "so_luong_nem_moi_la", label: "Nem mới lá", group: "nem_bi" },
-  { key: "so_luong_nem_moi_hop", label: "Nem mới hộp", group: "nem_bi" },
-  { key: "so_luong_bi_la", label: "Bì lá", group: "nem_bi" },
-  { key: "so_luong_bi_hop", label: "Bì hộp", group: "nem_bi" },
-  { key: "so_luong_cha", label: "Chả", group: "cha" },
-];
 
 export function OrderForm({
   prices,
@@ -48,7 +38,7 @@ export function OrderForm({
   const submittedRef = useRef(false);
   const [qty, setQty] = useState<SoLuong>(() => {
     const q = zeroSoLuong();
-    if (order) for (const f of QUANTITY_FIELDS) q[f.key] = order[f.key];
+    if (order) for (const f of SOLUONG_LEAVES) q[f.key] = order[f.key];
     return q;
   });
 
@@ -78,9 +68,7 @@ export function OrderForm({
     setQty((q) => ({ ...q, [key]: Number.isNaN(n) || n < 0 ? 0 : n }));
   }
 
-  const tongTien =
-    (orderSoLuongNem(qty) + orderSoLuongBi(qty)) * (prices.nem_bi?.gia_ban ?? 0) +
-    qty.so_luong_cha * (prices.cha?.gia_ban ?? 0);
+  const tongTien = tienBanTheoGia(qty, prices);
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-5">
@@ -99,7 +87,7 @@ export function OrderForm({
       </div>
 
       <div className="flex flex-col gap-2.5">
-        {QUANTITY_FIELDS.map((f) => (
+        {SOLUONG_LEAVES.map((f) => (
           <div
             key={f.key}
             className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/30 px-3 py-2"

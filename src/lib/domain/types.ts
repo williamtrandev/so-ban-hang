@@ -1,4 +1,6 @@
-export type PriceGroup = "nem_bi" | "cha";
+export const PRICE_GROUPS = ["nem_bi", "cha", "chuoi_chien", "khoai_lang_chien"] as const;
+
+export type PriceGroup = (typeof PRICE_GROUPS)[number];
 
 export interface Price {
   price_group: PriceGroup;
@@ -7,8 +9,9 @@ export interface Price {
   effective_from: string;
 }
 
-// Nem: (ăn liền|mới) × (lá|hộp) = 4 loại. Bì: lá|hộp = 2 loại. Chả: 1 loại.
-// Nem + bì cùng giá nhóm nem_bi; chả giá riêng.
+// Nem: (ăn liền|mới) × (lá|hộp) = 4 loại. Bì: lá|hộp = 2 loại. Chả, chuối chiên,
+// khoai lang chiên: mỗi thứ 1 loại.
+// Nem + bì chung giá nhóm nem_bi; chả và 2 món chiên mỗi thứ 1 nhóm giá riêng.
 export interface SoLuong {
   so_luong_nem_an_lien_la: number;
   so_luong_nem_an_lien_hop: number;
@@ -17,18 +20,23 @@ export interface SoLuong {
   so_luong_bi_la: number;
   so_luong_bi_hop: number;
   so_luong_cha: number;
+  so_luong_chuoi_chien: number;
+  so_luong_khoai_lang_chien: number;
 }
 
-// Thứ tự + nhãn hiển thị cho từng loại. Dùng chung cho label và tổng hợp.
+// Thứ tự + nhãn hiển thị + nhóm giá của từng loại. Dùng chung cho label, form
+// nhập và tổng hợp: thêm sản phẩm mới chỉ cần thêm 1 dòng ở đây.
 export const SOLUONG_LEAVES = [
-  { key: "so_luong_nem_an_lien_la", label: "Nem ăn liền lá" },
-  { key: "so_luong_nem_an_lien_hop", label: "Nem ăn liền hộp" },
-  { key: "so_luong_nem_moi_la", label: "Nem mới lá" },
-  { key: "so_luong_nem_moi_hop", label: "Nem mới hộp" },
-  { key: "so_luong_bi_la", label: "Bì lá" },
-  { key: "so_luong_bi_hop", label: "Bì hộp" },
-  { key: "so_luong_cha", label: "Chả" },
-] as const satisfies readonly { key: keyof SoLuong; label: string }[];
+  { key: "so_luong_nem_an_lien_la", label: "Nem ăn liền lá", group: "nem_bi" },
+  { key: "so_luong_nem_an_lien_hop", label: "Nem ăn liền hộp", group: "nem_bi" },
+  { key: "so_luong_nem_moi_la", label: "Nem mới lá", group: "nem_bi" },
+  { key: "so_luong_nem_moi_hop", label: "Nem mới hộp", group: "nem_bi" },
+  { key: "so_luong_bi_la", label: "Bì lá", group: "nem_bi" },
+  { key: "so_luong_bi_hop", label: "Bì hộp", group: "nem_bi" },
+  { key: "so_luong_cha", label: "Chả", group: "cha" },
+  { key: "so_luong_chuoi_chien", label: "Chuối chiên", group: "chuoi_chien" },
+  { key: "so_luong_khoai_lang_chien", label: "Khoai lang chiên", group: "khoai_lang_chien" },
+] as const satisfies readonly { key: keyof SoLuong; label: string; group: PriceGroup }[];
 
 export function zeroSoLuong(): SoLuong {
   return {
@@ -39,6 +47,8 @@ export function zeroSoLuong(): SoLuong {
     so_luong_bi_la: 0,
     so_luong_bi_hop: 0,
     so_luong_cha: 0,
+    so_luong_chuoi_chien: 0,
+    so_luong_khoai_lang_chien: 0,
   };
 }
 
@@ -53,6 +63,10 @@ export interface OrderRow extends SoLuong {
   gia_ban_nem_bi_snap: number;
   gia_goc_cha_snap: number;
   gia_ban_cha_snap: number;
+  gia_goc_chuoi_chien_snap: number;
+  gia_ban_chuoi_chien_snap: number;
+  gia_goc_khoai_lang_chien_snap: number;
+  gia_ban_khoai_lang_chien_snap: number;
   settlement_id: string | null;
   dot: number;
   created_at: string;
@@ -87,15 +101,44 @@ export function orderSoLuongBi(o: SoLuong): number {
 export function orderTienBan(o: OrderRow): number {
   return (
     (orderSoLuongNem(o) + orderSoLuongBi(o)) * o.gia_ban_nem_bi_snap +
-    o.so_luong_cha * o.gia_ban_cha_snap
+    o.so_luong_cha * o.gia_ban_cha_snap +
+    o.so_luong_chuoi_chien * o.gia_ban_chuoi_chien_snap +
+    o.so_luong_khoai_lang_chien * o.gia_ban_khoai_lang_chien_snap
   );
 }
 
 export function orderTienGoc(o: OrderRow): number {
   return (
     (orderSoLuongNem(o) + orderSoLuongBi(o)) * o.gia_goc_nem_bi_snap +
-    o.so_luong_cha * o.gia_goc_cha_snap
+    o.so_luong_cha * o.gia_goc_cha_snap +
+    o.so_luong_chuoi_chien * o.gia_goc_chuoi_chien_snap +
+    o.so_luong_khoai_lang_chien * o.gia_goc_khoai_lang_chien_snap
   );
+}
+
+// Tổng số phần của 1 đơn / 1 cụm số lượng (mọi loại sản phẩm).
+export function tongSoPhan(q: SoLuong): number {
+  return SOLUONG_LEAVES.reduce((sum, l) => sum + q[l.key], 0);
+}
+
+// Tiền bán theo bảng giá HIỆN TẠI: dùng cho phần xem trước lúc nhập, khi đơn
+// chưa lưu nên chưa có snapshot giá.
+export function tienBanTheoGia(q: SoLuong, prices: Record<PriceGroup, Price>): number {
+  return SOLUONG_LEAVES.reduce((sum, l) => sum + q[l.key] * (prices[l.group]?.gia_ban ?? 0), 0);
+}
+
+// Snapshot giá mọi nhóm để gắn vào đơn lúc tạo.
+export function priceSnapshot(prices: Record<PriceGroup, Price>) {
+  return {
+    gia_goc_nem_bi_snap: prices.nem_bi?.gia_goc ?? 0,
+    gia_ban_nem_bi_snap: prices.nem_bi?.gia_ban ?? 0,
+    gia_goc_cha_snap: prices.cha?.gia_goc ?? 0,
+    gia_ban_cha_snap: prices.cha?.gia_ban ?? 0,
+    gia_goc_chuoi_chien_snap: prices.chuoi_chien?.gia_goc ?? 0,
+    gia_ban_chuoi_chien_snap: prices.chuoi_chien?.gia_ban ?? 0,
+    gia_goc_khoai_lang_chien_snap: prices.khoai_lang_chien?.gia_goc ?? 0,
+    gia_ban_khoai_lang_chien_snap: prices.khoai_lang_chien?.gia_ban ?? 0,
+  };
 }
 
 // Đợt hiện tại = số đợt nhỏ nhất trong các đơn chưa quyết toán (0 nếu chưa có đơn).
@@ -114,7 +157,7 @@ export function calcTotals(orders: OrderRow[]): SettlementTotals {
         tienGoc: acc.tienGoc + goc,
         tienBan: acc.tienBan + ban,
         tienLoi: acc.tienLoi + (ban - goc),
-        soLuongTong: acc.soLuongTong + orderSoLuongNem(o) + orderSoLuongBi(o) + o.so_luong_cha,
+        soLuongTong: acc.soLuongTong + tongSoPhan(o),
       };
     },
     { tienGoc: 0, tienBan: 0, tienLoi: 0, soLuongTong: 0 },
@@ -173,7 +216,7 @@ export function buildSellerBreakdown(orders: OrderRow[]): SellerBreakdownRow[] {
     const tienBan = orderTienBan(o);
     const tienGoc = orderTienGoc(o);
     row.count += 1;
-    row.soLuong += orderSoLuongNem(o) + orderSoLuongBi(o) + o.so_luong_cha;
+    row.soLuong += tongSoPhan(o);
     for (const l of SOLUONG_LEAVES) row[l.key] += o[l.key];
     row.tienBan += tienBan;
     row.tienGoc += tienGoc;

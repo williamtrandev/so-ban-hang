@@ -2,7 +2,7 @@ import type { SoLuong } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
 
 // Chips số lượng gộp theo nhóm sản phẩm, chỉ hiện loại > 0, wrap tự nhiên
-// nên không bao giờ gây tràn ngang (thay cho nhãn text dài 7 loại).
+// nên không bao giờ gây tràn ngang (thay cho nhãn text dài liệt kê mọi loại).
 function buildGroups(q: SoLuong) {
   const groups: { label: string; parts: [string, number][] }[] = [
     {
@@ -27,6 +27,8 @@ function buildGroups(q: SoLuong) {
       ],
     },
     { label: "Chả", parts: [["", q.so_luong_cha]] },
+    { label: "Chuối chiên", parts: [["", q.so_luong_chuoi_chien]] },
+    { label: "Khoai lang chiên", parts: [["", q.so_luong_khoai_lang_chien]] },
   ];
   return groups
     .map((g) => ({ ...g, parts: g.parts.filter(([, n]) => n > 0) }))

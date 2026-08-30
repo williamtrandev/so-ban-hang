@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getPendingOrders } from "@/lib/domain/data";
-import { calcTotals, currentRound } from "@/lib/domain/types";
+import { PRICE_GROUPS, calcTotals, currentRound, type PriceGroup } from "@/lib/domain/types";
 
 export interface CloseSettlementState {
   error: string | null;
@@ -62,13 +62,21 @@ export async function updatePrices(
   _prevState: UpdatePricesState,
   formData: FormData,
 ): Promise<UpdatePricesState> {
-  const giaGocNemBi = Number(formData.get("gia_goc_nem_bi"));
-  const giaBanNemBi = Number(formData.get("gia_ban_nem_bi"));
-  const giaGocCha = Number(formData.get("gia_goc_cha"));
-  const giaBanCha = Number(formData.get("gia_ban_cha"));
+  // Thiếu ô nào cũng coi là không hợp lệ, tránh ghi nhầm giá 0 cho nhóm bị bỏ sót.
+  const readGia = (name: string): number | null => {
+    const raw = formData.get(name);
+    if (typeof raw !== "string" || raw.trim() === "") return null;
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
 
-  for (const n of [giaGocNemBi, giaBanNemBi, giaGocCha, giaBanCha]) {
-    if (!Number.isFinite(n) || n < 0) return { error: "Giá không hợp lệ.", saved: false };
+  // 1 dòng giá mới cho mỗi nhóm sản phẩm.
+  const rows: { price_group: PriceGroup; gia_goc: number; gia_ban: number }[] = [];
+  for (const g of PRICE_GROUPS) {
+    const giaGoc = readGia(`gia_goc_${g}`);
+    const giaBan = readGia(`gia_ban_${g}`);
+    if (giaGoc === null || giaBan === null) return { error: "Giá không hợp lệ.", saved: false };
+    rows.push({ price_group: g, gia_goc: giaGoc, gia_ban: giaBan });
   }
 
   const supabase = await createClient();
@@ -77,10 +85,9 @@ export async function updatePrices(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Phiên đăng nhập hết hạn, đăng nhập lại.", saved: false };
 
-  const { error } = await supabase.from("prices").insert([
-    { price_group: "nem_bi", gia_goc: giaGocNemBi, gia_ban: giaBanNemBi, set_by: user.id },
-    { price_group: "cha", gia_goc: giaGocCha, gia_ban: giaBanCha, set_by: user.id },
-  ]);
+  const { error } = await supabase
+    .from("prices")
+    .insert(rows.map((r) => ({ ...r, set_by: user.id })));
 
   if (error) return { error: error.message, saved: false };
 

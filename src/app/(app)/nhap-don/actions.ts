@@ -3,8 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPrices } from "@/lib/domain/data";
-import { SOLUONG_LEAVES, zeroSoLuong, type SoLuong } from "@/lib/domain/types";
+import {
+  SOLUONG_LEAVES,
+  priceSnapshot,
+  zeroSoLuong,
+  type Price,
+  type PriceGroup,
+  type SoLuong,
+} from "@/lib/domain/types";
 import { parseBulkOrders } from "./parse";
+
+// Mọi nhóm giá phải có giá hiện hành, nếu không đơn sẽ bị snapshot giá 0.
+function thieuGia(prices: Record<PriceGroup, Price>): boolean {
+  return SOLUONG_LEAVES.some((l) => !prices[l.group]);
+}
 
 // Số đợt cho đơn mới: đợt hiện tại (min dot đơn chưa quyết toán) + 1 nếu là đợt kế tiếp.
 async function resolveDot(
@@ -16,7 +28,7 @@ async function resolveDot(
   return cur + (nextBatch ? 1 : 0);
 }
 
-// Đọc 7 trường số lượng từ form. Trả null nếu có trường không hợp lệ hoặc tất cả = 0.
+// Đọc mọi trường số lượng từ form. Trả null nếu có trường không hợp lệ hoặc tất cả = 0.
 function readSoLuong(formData: FormData): SoLuong | null {
   const q = zeroSoLuong();
   for (const l of SOLUONG_LEAVES) {
@@ -36,7 +48,9 @@ export async function createOrder(_prevState: string | null, formData: FormData)
 
   if (!tenNguoiMua) return "Nhập tên người mua.";
   const qty = readSoLuong(formData);
-  if (!qty) return "Nhập ít nhất 1 số lượng hợp lệ (nem, bì, hoặc chả).";
+  if (!qty) {
+    return "Nhập ít nhất 1 số lượng hợp lệ (nem, bì, chả, chuối chiên hoặc khoai lang chiên).";
+  }
 
   const supabase = await createClient();
   const {
@@ -45,9 +59,7 @@ export async function createOrder(_prevState: string | null, formData: FormData)
   if (!user) return "Phiên đăng nhập hết hạn, đăng nhập lại.";
 
   const prices = await getCurrentPrices(supabase);
-  const nemBi = prices.nem_bi;
-  const cha = prices.cha;
-  if (!nemBi || !cha) return "Chưa có giá sản phẩm, liên hệ admin.";
+  if (thieuGia(prices)) return "Chưa có giá sản phẩm, liên hệ admin.";
 
   const dot = await resolveDot(supabase, formData.get("next_batch") === "on");
 
@@ -59,10 +71,7 @@ export async function createOrder(_prevState: string | null, formData: FormData)
     da_thanh_toan: daThanhToan,
     da_giao: daGiao,
     dot,
-    gia_goc_nem_bi_snap: nemBi.gia_goc,
-    gia_ban_nem_bi_snap: nemBi.gia_ban,
-    gia_goc_cha_snap: cha.gia_goc,
-    gia_ban_cha_snap: cha.gia_ban,
+    ...priceSnapshot(prices),
   });
 
   if (error) return error.message;
@@ -93,11 +102,10 @@ export async function createBulkOrders(
   if (!user) return "Phiên đăng nhập hết hạn, đăng nhập lại.";
 
   const prices = await getCurrentPrices(supabase);
-  const nemBi = prices.nem_bi;
-  const cha = prices.cha;
-  if (!nemBi || !cha) return "Chưa có giá sản phẩm, liên hệ admin.";
+  if (thieuGia(prices)) return "Chưa có giá sản phẩm, liên hệ admin.";
 
   const dot = await resolveDot(supabase, formData.get("next_batch") === "on");
+  const snap = priceSnapshot(prices);
 
   const rows = parsed.map((r) => {
     // Ép narrow: mọi phần tử ở đây đều ok (đã return ở firstError).
@@ -111,10 +119,7 @@ export async function createBulkOrders(
       da_thanh_toan,
       da_giao,
       dot,
-      gia_goc_nem_bi_snap: nemBi.gia_goc,
-      gia_ban_nem_bi_snap: nemBi.gia_ban,
-      gia_goc_cha_snap: cha.gia_goc,
-      gia_ban_cha_snap: cha.gia_ban,
+      ...snap,
     };
   });
 
@@ -158,7 +163,9 @@ export async function updateOrder(
 
   if (!tenNguoiMua) return "Nhập tên người mua.";
   const qty = readSoLuong(formData);
-  if (!qty) return "Nhập ít nhất 1 số lượng hợp lệ (nem, bì, hoặc chả).";
+  if (!qty) {
+    return "Nhập ít nhất 1 số lượng hợp lệ (nem, bì, chả, chuối chiên hoặc khoai lang chiên).";
+  }
 
   const supabase = await createClient();
   const {

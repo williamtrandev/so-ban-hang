@@ -6,9 +6,10 @@
 //     nml = nem mới lá         nmh = nem mới hộp
 //     bl  = bì lá              bh  = bì hộp
 //     c   = chả
+//     cc  = chuối chiên        kl  = khoai lang chiên
 //   token trạng thái: "tt" = đã thanh toán, "giao" = đã giao
 //   còn lại = ghi chú
-// Ví dụ: "Cô Bảy chợ Xổm, 2nl, 1nmh, 1bl, 1c, tt, giao, gói riêng"
+// Ví dụ: "Cô Bảy chợ Xổm, 2nl, 1nmh, 1bl, 1c, 2cc, 1kl, tt, giao, gói riêng"
 // Dùng chung cho client (preview) và server (validate + insert).
 
 import { zeroSoLuong, type SoLuong } from "@/lib/domain/types";
@@ -27,8 +28,8 @@ export type ParseLineResult =
 const PAID_TOKENS = new Set(["tt", "đã tt", "thanh toán", "đã thanh toán", "paid"]);
 const DELIVERED_TOKENS = new Set(["giao", "đã giao", "delivered", "ship"]);
 
-// Đơn vị dài (nml/nmh) đứng trước đơn vị ngắn (nl/nh) để khớp đúng.
-const QTY_RE = /^(\d+)\s*(nml|nmh|nl|nh|bl|bh|c)$/i;
+// Đơn vị dài (nml/nmh, cc) đứng trước đơn vị ngắn (nl/nh, c) để khớp đúng.
+const QTY_RE = /^(\d+)\s*(nml|nmh|nl|nh|bl|bh|cc|kl|c)$/i;
 
 const QTY_FIELD = {
   nl: "so_luong_nem_an_lien_la",
@@ -38,6 +39,8 @@ const QTY_FIELD = {
   bl: "so_luong_bi_la",
   bh: "so_luong_bi_hop",
   c: "so_luong_cha",
+  cc: "so_luong_chuoi_chien",
+  kl: "so_luong_khoai_lang_chien",
 } as const satisfies Record<string, keyof SoLuong>;
 
 export function parseBulkOrders(text: string): ParseLineResult[] {
@@ -84,7 +87,7 @@ export function parseBulkOrders(text: string): ParseLineResult[] {
         ok: false,
         line,
         raw,
-        error: "Cần ít nhất 1 số lượng (vd: 2nl, 1nmh, 1bl, 1c).",
+        error: "Cần ít nhất 1 số lượng (vd: 2nl, 1nmh, 1bl, 1c, 2cc, 1kl).",
       });
       return;
     }

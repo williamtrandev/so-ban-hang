@@ -9,9 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   formatVnd,
-  orderSoLuongNem,
-  orderSoLuongBi,
   soLuongLabel,
+  tienBanTheoGia,
   type Price,
   type PriceGroup,
 } from "@/lib/domain/types";
@@ -49,16 +48,7 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
   const badRows = parsed.filter((r) => !r.ok);
 
   const tongTien = useMemo(
-    () =>
-      okRows.reduce((sum, r) => {
-        if (!r.ok) return sum;
-        const o = r.order;
-        return (
-          sum +
-          (orderSoLuongNem(o) + orderSoLuongBi(o)) * (prices.nem_bi?.gia_ban ?? 0) +
-          o.so_luong_cha * (prices.cha?.gia_ban ?? 0)
-        );
-      }, 0),
+    () => okRows.reduce((sum, r) => (r.ok ? sum + tienBanTheoGia(r.order, prices) : sum), 0),
     [okRows, prices],
   );
 
@@ -87,7 +77,7 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
         autoComplete="off"
         spellCheck={false}
         placeholder={
-          "Cô Bảy chợ Xổm, 2nl, 1nmh, 1bl, 1c, tt, giao, gói riêng\nAnh Tư, 5c, tt\nChị Ba, 1nmh, 2bh, giao chiều"
+          "Cô Bảy chợ Xổm, 2nl, 1nmh, 1bl, 1c, tt, giao, gói riêng\nAnh Tư, 5c, 2cc, tt\nChị Ba, 1nmh, 2bh, 3kl, giao chiều"
         }
         className="font-mono text-sm tabular-nums"
       />

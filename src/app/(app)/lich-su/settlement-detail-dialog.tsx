@@ -92,6 +92,18 @@ export function SettlementDetailDialog({
                           {pt.so_luong_cha}
                         </span>
                       </span>
+                      <span>
+                        Chuối chiên{" "}
+                        <span className="font-semibold text-foreground tabular-nums">
+                          {pt.so_luong_chuoi_chien}
+                        </span>
+                      </span>
+                      <span>
+                        Khoai lang chiên{" "}
+                        <span className="font-semibold text-foreground tabular-nums">
+                          {pt.so_luong_khoai_lang_chien}
+                        </span>
+                      </span>
                     </div>
                     <SoLuongChips q={pt} />
                   </div>

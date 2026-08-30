@@ -9,9 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   formatVnd,
-  orderSoLuongNem,
-  orderSoLuongBi,
   soLuongLabel,
+  tienBanTheoGia,
   type Price,
   type PriceGroup,
 } from "@/lib/domain/types";
@@ -39,14 +38,10 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
 
   const result = useMemo(() => parseBulkOrders(text)[0], [text]);
 
-  const tongTien = useMemo(() => {
-    if (!result?.ok) return 0;
-    const o = result.order;
-    return (
-      (orderSoLuongNem(o) + orderSoLuongBi(o)) * (prices.nem_bi?.gia_ban ?? 0) +
-      o.so_luong_cha * (prices.cha?.gia_ban ?? 0)
-    );
-  }, [result, prices]);
+  const tongTien = useMemo(
+    () => (result?.ok ? tienBanTheoGia(result.order, prices) : 0),
+    [result, prices],
+  );
 
   useEffect(() => {
     if (pending) {
@@ -75,7 +70,7 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
           onChange={(e) => setText(e.target.value)}
           autoComplete="off"
           autoFocus
-          placeholder="Cô Bảy chợ Xổm, 2nl, 1nmh, 1bl, 1c, tt, giao, gói riêng"
+          placeholder="Cô Bảy chợ Xổm, 2nl, 1nmh, 1bl, 1c, 2cc, 1kl, tt, giao, gói riêng"
           className="font-mono tabular-nums"
         />
         <Button type="submit" disabled={!canSubmit}>
@@ -99,8 +94,8 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
           <span className="truncate text-destructive">{result.error}</span>
         ) : (
           <span className="truncate text-muted-foreground">
-            Cú pháp: Tên, 2nl, 1nmh, 1bl, 1c, [tt], [giao] · nl/nh=nem ăn liền lá/hộp, nml/nmh=nem mới
-            lá/hộp, bl/bh=bì lá/hộp, c=chả
+            Cú pháp: Tên, 2nl, 1nmh, 1bl, 1c, 2cc, 1kl, [tt], [giao] · nl/nh=nem ăn liền lá/hộp,
+            nml/nmh=nem mới lá/hộp, bl/bh=bì lá/hộp, c=chả, cc=chuối chiên, kl=khoai lang chiên
           </span>
         )}
         {tongTien > 0 && (
