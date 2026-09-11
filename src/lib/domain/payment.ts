@@ -1,8 +1,6 @@
 // Tạo mã QR chuyển tiền: VietQR (napas 247) cho ngân hàng + QR chuyển tiền MoMo.
-// Nội dung mặc định để không diacritic cho chắc chắn app quét được (memo ngân hàng
-// vốn cũng bỏ dấu). Cấu hình nhận tiền lấy theo người bán tạo đơn, không cố định.
-
-export const TRANSFER_NOTE = "Gui tien an uong";
+// Không ép nội dung chuyển khoản — để trống cho app ngân hàng tự điền nội dung
+// mặc định của họ (mỗi app một kiểu). Cấu hình nhận tiền lấy theo người bán tạo đơn.
 
 // Thông tin nhận tiền lưu trên profile của từng người bán.
 export interface PaymentInfo {
@@ -60,6 +58,12 @@ export function hasBank(p: PaymentInfo): boolean {
   return !!(p.bank_bin?.trim() && p.bank_account?.trim());
 }
 
+// Badge chữ cho ngân hàng: MoMo dùng nhãn riêng, còn lại lấy 2 ký tự đầu.
+export function bankInitials(short: string): string {
+  if (short.toLowerCase() === "momo") return "Mo";
+  return short.replace(/[^A-Za-z]/g, "").slice(0, 2) || "NH";
+}
+
 // ---- EMVCo TLV helpers (VietQR) ----
 
 function tlv(id: string, value: string): string {
@@ -84,7 +88,7 @@ export function buildVietQr(args: {
   bin: string;
   account: string;
   amount: number;
-  note: string;
+  note?: string;
 }): string {
   const merchantAccountInfo =
     tlv("00", "A000000727") +

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode, Copy, Check, CheckCircle2, Landmark, Info } from "lucide-react";
+import { QrCode, Copy, Check, CheckCircle2, Landmark, Info, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { formatVnd, orderTienBan, type OrderRow } from "@/lib/domain/types";
 import {
-  TRANSFER_NOTE,
   bankByBin,
+  bankInitials,
   buildVietQr,
   hasBank,
   type PaymentInfo,
@@ -102,19 +102,52 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              <div className="flex justify-center rounded-lg bg-white p-4">
-                <QRCodeSVG
-                  value={buildVietQr({
-                    bin: pay.bank_bin!,
-                    account: pay.bank_account!,
-                    amount,
-                    note: TRANSFER_NOTE,
-                  })}
-                  size={200}
-                  level="M"
-                  marginSize={0}
-                />
+              <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-card to-muted/30 p-4 shadow-[0_16px_40px_-24px_color-mix(in_oklch,var(--foreground)_35%,transparent)]">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-9 items-center justify-center rounded-xl bg-primary/12 text-[13px] font-bold tracking-tight text-primary ring-1 ring-primary/20">
+                      {bank ? bankInitials(bank.short) : "NH"}
+                    </span>
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-sm font-semibold">{bank?.short ?? "Ngân hàng"}</span>
+                      <span className="text-[11px] text-muted-foreground">Nhận tiền</span>
+                    </div>
+                  </div>
+                  <span className="flex items-center gap-1 text-[11px] font-medium tracking-wide text-muted-foreground">
+                    <ScanLine className="size-3.5" />
+                    VietQR
+                  </span>
+                </div>
+
+                <div className="flex justify-center rounded-xl bg-white p-4">
+                  <QRCodeSVG
+                    value={buildVietQr({
+                      bin: pay.bank_bin!,
+                      account: pay.bank_account!,
+                      amount,
+                    })}
+                    size={200}
+                    level="M"
+                    marginSize={0}
+                  />
+                </div>
+
+                <dl className="mt-4 flex flex-col gap-2 border-t border-border/60 pt-3 text-sm">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <dt className="shrink-0 text-xs text-muted-foreground">
+                      {isMomo ? "SĐT MoMo" : "Số tài khoản"}
+                    </dt>
+                    <dd className="truncate font-medium tabular-nums">{pay.bank_account}</dd>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <dt className="shrink-0 text-xs text-muted-foreground">Chủ tài khoản</dt>
+                    <dd className="truncate font-medium uppercase">
+                      {pay.bank_account_name || "—"}
+                    </dd>
+                  </div>
+                </dl>
               </div>
+
               <p className="text-center text-xs text-muted-foreground">
                 {isMomo
                   ? "Quét bằng app ngân hàng để chuyển vào ví MoMo"
@@ -134,11 +167,7 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
                   label={isMomo ? "SĐT MoMo" : bank ? `Ngân hàng · ${bank.short}` : "Số tài khoản"}
                   value={pay.bank_account!}
                 />
-                {pay.bank_account_name && (
-                  <CopyRow label="Chủ tài khoản" value={pay.bank_account_name} />
-                )}
                 <CopyRow label="Số tiền" value={amount.toLocaleString("vi-VN")} />
-                <CopyRow label="Nội dung" value={TRANSFER_NOTE} />
               </div>
             </div>
           )}

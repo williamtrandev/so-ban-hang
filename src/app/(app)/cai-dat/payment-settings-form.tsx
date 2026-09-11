@@ -8,19 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { BANKS, TRANSFER_NOTE, bankByBin, buildVietQr } from "@/lib/domain/payment";
+import { BANKS, bankByBin, bankInitials, buildVietQr } from "@/lib/domain/payment";
 import { savePaymentInfo } from "./actions";
 
 export interface PaymentSettings {
   bank_bin: string | null;
   bank_account: string | null;
   bank_account_name: string | null;
-}
-
-// Badge chữ cho ngân hàng: MoMo dùng nhãn riêng, còn lại lấy 2 ký tự đầu.
-function bankInitials(short: string): string {
-  if (short.toLowerCase() === "momo") return "Mo";
-  return short.replace(/[^A-Za-z]/g, "").slice(0, 2) || "NH";
 }
 
 function PreviewCard({
@@ -34,9 +28,7 @@ function PreviewCard({
 }) {
   const bank = bankByBin(bin);
   const ready = !!(bin && account.trim());
-  const value = ready
-    ? buildVietQr({ bin, account: account.trim(), amount: 50000, note: TRANSFER_NOTE })
-    : "";
+  const value = ready ? buildVietQr({ bin, account: account.trim(), amount: 50000 }) : "";
 
   return (
     <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-card to-muted/30 p-4 shadow-[0_16px_40px_-24px_color-mix(in_oklch,var(--foreground)_35%,transparent)]">
@@ -79,10 +71,6 @@ function PreviewCard({
         <div className="flex items-baseline justify-between gap-3">
           <dt className="shrink-0 text-xs text-muted-foreground">Chủ tài khoản</dt>
           <dd className="truncate font-medium uppercase">{accountName.trim() || "—"}</dd>
-        </div>
-        <div className="flex items-baseline justify-between gap-3 border-t border-border/60 pt-2">
-          <dt className="shrink-0 text-xs text-muted-foreground">Nội dung</dt>
-          <dd className="truncate text-muted-foreground">{TRANSFER_NOTE}</dd>
         </div>
       </dl>
     </div>
