@@ -7,28 +7,30 @@ export function SellerBreakdownTable({ rows }: { rows: SellerBreakdownRow[] }) {
   return (
     <ul className="flex flex-col divide-y divide-border/60">
       {rows.map((row) => (
-        <li key={row.name} className="flex flex-col gap-2 p-3">
+        <li key={row.name} className="flex flex-col gap-2.5 p-3">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="font-medium">{row.name}</span>
+            <span className="truncate font-medium">{row.name}</span>
             <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-              {row.soLuong} phần · {row.count} đơn
+              {row.count} đơn · {row.soLuong} phần
             </span>
           </div>
           <SoLuongChips q={row} />
-          <div className="grid grid-cols-3 gap-2 text-sm">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs text-muted-foreground">Tiền nhận</span>
-              <span className="tabular-nums">{formatVnd(row.tienBan)}</span>
+          <dl className="grid grid-cols-3 gap-2 text-sm">
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <dt className="text-xs text-muted-foreground">Tiền gốc</dt>
+              <dd className="truncate tabular-nums">{formatVnd(row.tienGoc)}</dd>
             </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs text-muted-foreground">Vốn</span>
-              <span className="tabular-nums text-muted-foreground">{formatVnd(row.tienGoc)}</span>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <dt className="text-xs text-muted-foreground">Tiền bán</dt>
+              <dd className="truncate tabular-nums">{formatVnd(row.tienBan)}</dd>
             </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs text-muted-foreground">Lời</span>
-              <span className="font-medium tabular-nums text-primary">{formatVnd(row.tienLoi)}</span>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <dt className="text-xs text-muted-foreground">Tiền lời</dt>
+              <dd className="truncate font-medium tabular-nums text-primary">
+                {formatVnd(row.tienLoi)}
+              </dd>
             </div>
-          </div>
+          </dl>
         </li>
       ))}
     </ul>

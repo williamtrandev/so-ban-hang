@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Banknote, TrendingUp, History, Crown } from "lucide-react";
+import { Banknote, TrendingUp, History } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   getCurrentPrices,
@@ -20,9 +19,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { SettlementPanel } from "./settlement-panel";
+import { SellerRevenueList } from "./seller-revenue-list";
 
 export default async function QuyetToanPage() {
   const supabase = await createClient();
@@ -88,25 +86,11 @@ export default async function QuyetToanPage() {
     // xl: trang khoá đúng chiều cao viewport (trừ navbar + padding main), list dài
     // scroll bên trong card thay vì scroll cả trang.
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:gap-5 xl:h-[calc(100dvh-7.5rem)]">
-      <header className="flex shrink-0 items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Quyết toán
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Thống kê doanh thu và chốt đợt bán hiện tại.
-          </p>
-        </div>
-        <Link
-          href="/lich-su"
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
-        >
-          <History />
-          Lịch sử
-          <span className="hidden text-muted-foreground tabular-nums sm:inline">
-            ({history.length})
-          </span>
-        </Link>
+      <header className="flex shrink-0 flex-col gap-1">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">Quyết toán</h1>
+        <p className="text-sm text-muted-foreground">
+          Thống kê doanh thu và chốt đợt bán hiện tại.
+        </p>
       </header>
 
       <dl className="grid shrink-0 grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
@@ -182,52 +166,11 @@ export default async function QuyetToanPage() {
           <CardHeader>
             <CardTitle>Doanh thu theo người bán</CardTitle>
             <CardDescription>
-              Toàn thời gian, gồm cả đợt đang bán.
+              Tiền bán và tiền gốc toàn thời gian, gồm cả đợt đang bán.
             </CardDescription>
           </CardHeader>
           <CardContent className="xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
-            {allTimeBySeller.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Chưa có đơn nào.</p>
-            ) : (
-              <ul className="divide-y divide-border/60">
-                {allTimeBySeller.map((row, i) => (
-                  <li
-                    key={row.name}
-                    className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
-                  >
-                    <span
-                      className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ${
-                        i === 0
-                          ? "bg-primary/15 text-primary"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {i === 0 ? (
-                        <Crown className="size-4" strokeWidth={1.75} />
-                      ) : (
-                        i + 1
-                      )}
-                    </span>
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-sm font-medium">
-                        {row.name}
-                      </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {row.count} đơn · {row.soLuong} phần
-                      </span>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end">
-                      <span className="text-sm font-semibold tabular-nums">
-                        {formatVnd(row.tienBan)}
-                      </span>
-                      <span className="text-xs tabular-nums text-primary">
-                        +{formatVnd(row.tienLoi)} lời
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <SellerRevenueList rows={allTimeBySeller} />
           </CardContent>
         </Card>
       </div>
