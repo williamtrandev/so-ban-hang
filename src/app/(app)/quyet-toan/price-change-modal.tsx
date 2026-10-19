@@ -4,7 +4,6 @@ import { useActionState, useEffect } from "react";
 import { updatePrices, type UpdatePricesState } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -56,38 +55,46 @@ export function PriceChangeModal({
             giá từng loại.
           </DialogDescription>
         </DialogHeader>
-        <form action={formAction} className="flex flex-col gap-5">
-          {PRICE_GROUPS.map((g) => (
-            <fieldset key={g} className="flex flex-col gap-3">
-              <legend className="text-sm font-medium">{PRICE_FIELDS[g].label}</legend>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor={`gia_goc_${g}`}>Giá gốc</Label>
-                  <Input
-                    id={`gia_goc_${g}`}
-                    name={`gia_goc_${g}`}
-                    type="number"
-                    min={0}
-                    step={500}
-                    defaultValue={prices[g]?.gia_goc ?? PRICE_FIELDS[g].goc}
-                    required
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor={`gia_ban_${g}`}>Giá bán</Label>
-                  <Input
-                    id={`gia_ban_${g}`}
-                    name={`gia_ban_${g}`}
-                    type="number"
-                    min={0}
-                    step={500}
-                    defaultValue={prices[g]?.gia_ban ?? PRICE_FIELDS[g].ban}
-                    required
-                  />
-                </div>
+        <form action={formAction} className="flex flex-col gap-4">
+          <div className="overflow-hidden rounded-xl border border-border/60">
+            <div className="grid grid-cols-[minmax(0,1fr)_6.5rem_6.5rem] items-center gap-2 bg-muted/40 px-3 py-2 text-xs text-muted-foreground sm:grid-cols-[minmax(0,1fr)_8rem_8rem]">
+              <span>Món</span>
+              <span>Giá gốc</span>
+              <span>Giá bán</span>
+            </div>
+            {PRICE_GROUPS.map((g) => (
+              <div
+                key={g}
+                className="grid grid-cols-[minmax(0,1fr)_6.5rem_6.5rem] items-center gap-2 border-t border-border/60 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_8rem_8rem]"
+              >
+                <span className="truncate text-sm font-medium">{PRICE_FIELDS[g].label}</span>
+                <Input
+                  aria-label={`Giá gốc ${PRICE_FIELDS[g].label}`}
+                  name={`gia_goc_${g}`}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={500}
+                  defaultValue={prices[g]?.gia_goc ?? PRICE_FIELDS[g].goc}
+                  onFocus={(e) => e.target.select()}
+                  className="tabular-nums"
+                  required
+                />
+                <Input
+                  aria-label={`Giá bán ${PRICE_FIELDS[g].label}`}
+                  name={`gia_ban_${g}`}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={500}
+                  defaultValue={prices[g]?.gia_ban ?? PRICE_FIELDS[g].ban}
+                  onFocus={(e) => e.target.select()}
+                  className="tabular-nums"
+                  required
+                />
               </div>
-            </fieldset>
-          ))}
+            ))}
+          </div>
           {state.error && <p className="text-sm text-destructive">{state.error}</p>}
           <DialogFooter className="gap-2 sm:gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

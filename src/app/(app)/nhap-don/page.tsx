@@ -90,10 +90,7 @@ export default async function NhapDonPage() {
               Nhập nhanh
             </CardTitle>
             <CardDescription>
-              Mỗi đơn:{" "}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">Tên, 2nl, 1nmh, 1bl, 1c, [tt], [giao], [ghi chú]</code>
-              . Nem/bì thêm l=lá, h=hộp: nl/nh=nem ăn liền, nml/nmh=nem mới, bl/bh=bì, c=chả (thứ tự tự
-              do, bỏ loại nào không có).
+              Gõ tên người mua, bấm món, rồi Enter hoặc bấm Thêm.
             </CardDescription>
           </CardHeader>
           <CardContent>

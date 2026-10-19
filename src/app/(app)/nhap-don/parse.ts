@@ -25,13 +25,13 @@ export type ParseLineResult =
   | { ok: true; line: number; raw: string; order: ParsedOrder }
   | { ok: false; line: number; raw: string; error: string };
 
-const PAID_TOKENS = new Set(["tt", "đã tt", "thanh toán", "đã thanh toán", "paid"]);
-const DELIVERED_TOKENS = new Set(["giao", "đã giao", "delivered", "ship"]);
+export const PAID_TOKENS = new Set(["tt", "đã tt", "thanh toán", "đã thanh toán", "paid"]);
+export const DELIVERED_TOKENS = new Set(["giao", "đã giao", "delivered", "ship"]);
 
 // Đơn vị dài (nml/nmh, cc) đứng trước đơn vị ngắn (nl/nh, c) để khớp đúng.
-const QTY_RE = /^(\d+)\s*(nml|nmh|nl|nh|bl|bh|cc|kl|c)$/i;
+export const QTY_RE = /^(\d+)\s*(nml|nmh|nl|nh|bl|bh|cc|kl|c)$/i;
 
-const QTY_FIELD = {
+export const QTY_FIELD = {
   nl: "so_luong_nem_an_lien_la",
   nh: "so_luong_nem_an_lien_hop",
   nml: "so_luong_nem_moi_la",
@@ -107,4 +107,64 @@ export function parseBulkOrders(text: string): ParseLineResult[] {
   });
 
   return results;
+}
+
+// ---- Sửa text nhập nhanh bằng nút bấm (khỏi phải gõ mã trên điện thoại) ----
+
+export type QtyCode = keyof typeof QTY_FIELD;
+
+function splitQuick(text: string) {
+  const [name = "", ...rest] = text.split(",");
+  return { name: name.trim(), tokens: rest.map((t) => t.trim()).filter(Boolean) };
+}
+
+function joinQuick(name: string, tokens: string[]) {
+  return [name, ...tokens].join(", ");
+}
+
+// Số lượng từng mã + trạng thái đang có trong 1 dòng nhập nhanh.
+export function quickTokenState(text: string) {
+  const { tokens } = splitQuick(text);
+  const qty: Partial<Record<QtyCode, number>> = {};
+  let paid = false;
+  let delivered = false;
+  for (const t of tokens) {
+    const m = QTY_RE.exec(t);
+    if (m) {
+      const code = m[2].toLowerCase() as QtyCode;
+      qty[code] = (qty[code] ?? 0) + parseInt(m[1], 10);
+    } else if (PAID_TOKENS.has(t.toLowerCase())) paid = true;
+    else if (DELIVERED_TOKENS.has(t.toLowerCase())) delivered = true;
+  }
+  return { qty, paid, delivered };
+}
+
+// Cộng/trừ 1 mã: gộp mọi token cùng mã thành 1, về 0 thì bỏ hẳn. Token mới
+// chèn sau token số lượng cuối cùng để trạng thái/ghi chú vẫn nằm cuối dòng.
+export function bumpQuickQty(text: string, code: QtyCode, delta: number): string {
+  const { name, tokens } = splitQuick(text);
+  const total = Math.max(0, (quickTokenState(text).qty[code] ?? 0) + delta);
+  const out: string[] = [];
+  let placed = false;
+  let lastQty = -1;
+  for (const t of tokens) {
+    const m = QTY_RE.exec(t);
+    if (m && m[2].toLowerCase() === code) {
+      if (!placed && total > 0) out.push(`${total}${code}`);
+      placed = true;
+      continue;
+    }
+    out.push(t);
+    if (m) lastQty = out.length - 1;
+  }
+  if (!placed && total > 0) out.splice(lastQty + 1, 0, `${total}${code}`);
+  return joinQuick(name, out);
+}
+
+export function toggleQuickStatus(text: string, kind: "paid" | "delivered"): string {
+  const { name, tokens } = splitQuick(text);
+  const set = kind === "paid" ? PAID_TOKENS : DELIVERED_TOKENS;
+  const kept = tokens.filter((t) => !set.has(t.toLowerCase()));
+  if (kept.length === tokens.length) kept.push(kind === "paid" ? "tt" : "giao");
+  return joinQuick(name, kept);
 }

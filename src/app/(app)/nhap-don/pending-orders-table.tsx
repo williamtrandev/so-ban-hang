@@ -31,7 +31,6 @@ import {
   calcTotals,
   calcProductTotals,
   orderTienBan,
-  soLuongLabel,
   type OrderRow,
   type Price,
   type PriceGroup,
@@ -245,90 +244,96 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
       ) : (
         <>
           {/* Mobile: card list */}
-          <ul className="flex flex-col gap-3 md:hidden">
-            {filteredOrders.map((order, i) => (
-              <li
-                key={order.id}
-                className={cn(
-                  "flex flex-col gap-2.5 rounded-lg border border-border/70 p-3 animate-in fade-in slide-in-from-bottom-1 duration-300",
-                  order.id.startsWith(TMP_PREFIX) && "animate-pulse opacity-60",
-                )}
-                style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex flex-col">
-                    <span className="font-medium">{order.ten_nguoi_mua}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {order.profiles?.full_name ?? "—"} · {formatDateTime(order.created_at)}
+          <ul className="flex flex-col gap-2.5 md:hidden">
+            {filteredOrders.map((order, i) => {
+              const tmp = order.id.startsWith(TMP_PREFIX);
+              return (
+                <li
+                  key={order.id}
+                  className={cn(
+                    "flex flex-col gap-2.5 rounded-xl border border-border/70 bg-card p-3 animate-in fade-in slide-in-from-bottom-1 duration-300",
+                    tmp && "animate-pulse opacity-60",
+                  )}
+                  style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate font-medium">{order.ten_nguoi_mua}</span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {order.profiles?.full_name ?? "—"} · {formatDateTime(order.created_at)}
+                      </span>
+                    </div>
+                    <span className="shrink-0 font-semibold tabular-nums">
+                      {formatVnd(orderTienBan(order))}
                     </span>
                   </div>
-                  <div className="flex gap-1">
-                    {!order.id.startsWith(TMP_PREFIX) && <PaymentQrButton order={order} />}
-                    <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
+                  <SoLuongChips q={order} />
+                  {order.ghi_chu && (
+                    <p className="text-xs text-muted-foreground italic">{order.ghi_chu}</p>
+                  )}
+                  <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-2.5">
+                    <StatusPair order={order} />
+                    <div className="flex gap-0.5">
+                      {!tmp && <PaymentQrButton order={order} />}
+                      <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-muted-foreground tabular-nums">{soLuongLabel(order)}</span>
-                  <span className="font-medium tabular-nums">{formatVnd(orderTienBan(order))}</span>
-                </div>
-                {order.ghi_chu && <p className="text-xs text-muted-foreground">{order.ghi_chu}</p>}
-                <StatusPair order={order} />
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
 
           {/* Desktop: table */}
-          <div className="hidden md:block">
+          <div className="hidden overflow-hidden rounded-xl border border-border/60 md:block">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Người mua</TableHead>
-                  <TableHead>Người tạo</TableHead>
-                  <TableHead>Lúc</TableHead>
-                  <TableHead>Số lượng</TableHead>
-                  <TableHead>Ghi chú</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead className="text-right">Tiền bán</TableHead>
-                  <TableHead className="w-20" />
+              <TableHeader className="bg-muted/40">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-9 text-xs text-muted-foreground">Người mua</TableHead>
+                  <TableHead className="h-9 text-xs text-muted-foreground">Số lượng</TableHead>
+                  <TableHead className="h-9 text-xs text-muted-foreground">Trạng thái</TableHead>
+                  <TableHead className="h-9 text-right text-xs text-muted-foreground">Tiền bán</TableHead>
+                  <TableHead className="h-9 w-24" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order, i) => (
-                  <TableRow
-                    key={order.id}
-                    className={cn(
-                      "animate-in fade-in slide-in-from-left-1 duration-300",
-                      order.id.startsWith(TMP_PREFIX) && "animate-pulse opacity-60",
-                    )}
-                    style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
-                  >
-                    <TableCell className="font-medium">{order.ten_nguoi_mua}</TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {order.profiles?.full_name ?? "—"}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground tabular-nums">
-                      {formatDateTime(order.created_at)}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap tabular-nums text-muted-foreground">
-                      {soLuongLabel(order)}
-                    </TableCell>
-                    <TableCell className="max-w-40 truncate text-muted-foreground">
-                      {order.ghi_chu || "—"}
-                    </TableCell>
-                    <TableCell>
-                      <StatusPair order={order} />
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatVnd(orderTienBan(order))}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {!order.id.startsWith(TMP_PREFIX) && <PaymentQrButton order={order} />}
-                        <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredOrders.map((order, i) => {
+                  const tmp = order.id.startsWith(TMP_PREFIX);
+                  return (
+                    <TableRow
+                      key={order.id}
+                      className={cn(
+                        "border-border/60 animate-in fade-in slide-in-from-left-1 duration-300",
+                        tmp && "animate-pulse opacity-60",
+                      )}
+                      style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
+                    >
+                      <TableCell className="max-w-64 whitespace-normal">
+                        <div className="font-medium">{order.ten_nguoi_mua}</div>
+                        <div className="text-xs text-muted-foreground tabular-nums">
+                          {order.profiles?.full_name ?? "—"} · {formatDateTime(order.created_at)}
+                        </div>
+                        {order.ghi_chu && (
+                          <div className="mt-0.5 text-xs text-muted-foreground italic">{order.ghi_chu}</div>
+                        )}
+                      </TableCell>
+                      <TableCell className="whitespace-normal">
+                        <SoLuongChips q={order} />
+                      </TableCell>
+                      <TableCell>
+                        <StatusPair order={order} />
+                      </TableCell>
+                      <TableCell className="text-right font-medium tabular-nums">
+                        {formatVnd(orderTienBan(order))}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-0.5">
+                          {!tmp && <PaymentQrButton order={order} />}
+                          <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
@@ -344,7 +349,7 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
       </div>
 
       <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Sửa đơn</DialogTitle>
             <DialogDescription>Cập nhật thông tin người mua và số lượng.</DialogDescription>

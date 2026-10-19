@@ -86,7 +86,7 @@ export function OrderForm({
         />
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="grid gap-2 sm:grid-cols-2">
         {SOLUONG_LEAVES.map((f) => (
           <div
             key={f.key}

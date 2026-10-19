@@ -81,6 +81,22 @@ export function BulkAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
         }
         className="font-mono text-sm tabular-nums"
       />
+      <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        {[
+          ["nl / nh", "nem ăn liền lá / hộp"],
+          ["nml / nmh", "nem mới lá / hộp"],
+          ["bl / bh", "bì lá / hộp"],
+          ["c", "chả"],
+          ["cc", "chuối chiên"],
+          ["kl", "khoai lang chiên"],
+          ["tt", "đã thanh toán"],
+          ["giao", "đã giao"],
+        ].map(([code, label]) => (
+          <span key={code}>
+            <code className="font-medium text-foreground">{code}</code> {label}
+          </span>
+        ))}
+      </p>
 
       {parsed.length > 0 && (
         <div className="flex flex-col gap-1 rounded-lg border border-border/70 bg-muted/30 p-3 text-sm">
