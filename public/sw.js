@@ -1,4 +1,4 @@
-const CACHE = "shop-shell-v2";
+const CACHE = "shop-shell-v3";
 const OFFLINE_URL = "/offline.html";
 
 // Tài nguyên có hash trong tên (JS/CSS/font của Next) hoặc ít đổi (icon, splash):
