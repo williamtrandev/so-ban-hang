@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { NotebookText, PencilLine, Wallet, History, Users, Settings, LogOut, type LucideIcon } from "lucide-react";
+import { PencilLine, Wallet, History, Users, Settings, LogOut, type LucideIcon } from "lucide-react";
 import { signOut } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 function initialsOf(fullName: string): string {
@@ -44,9 +45,7 @@ export function NavBar({ fullName, role }: { fullName: string; role: string }) {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 rounded-2xl border border-foreground/10 bg-background/80 px-2 shadow-[0_12px_32px_-16px_color-mix(in_oklch,var(--foreground)_30%,transparent),inset_0_1px_0_color-mix(in_oklch,var(--foreground)_6%,transparent)] backdrop-blur-xl md:gap-4 md:px-4">
         <div className="flex min-w-0 items-center gap-1.5 md:gap-4">
           <Link href="/nhap-don" className="flex shrink-0 items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/20">
-              <NotebookText className="size-4" strokeWidth={1.75} />
-            </span>
+            <Logo className="size-8 shadow-sm" />
             <span className="hidden font-heading text-sm font-semibold tracking-tight sm:inline">
               Sổ bán hàng
             </span>

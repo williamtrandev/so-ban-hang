@@ -1,5 +1,5 @@
 // Sinh ảnh splash iOS (apple-touch-startup-image) cho từng size máy.
-// Nền tối #0a0a0a khớp manifest background_color, icon bo góc đặt giữa.
+// Nền tối #0a0a0a khớp manifest background_color, logo (icon-512) đặt giữa.
 // Chạy lại khi đổi icon: node scripts/generate-splash.mjs
 import sharp from "sharp";
 import { mkdir } from "node:fs/promises";
@@ -54,16 +54,10 @@ async function main() {
       .png()
       .toBuffer();
 
-    // Icon nền tối trên splash tối sẽ lẫn nền: thêm ring mờ để tách khối.
-    const ring = Buffer.from(
-      `<svg width="${size + 8}" height="${size + 8}"><rect x="1" y="1" width="${size + 6}" height="${size + 6}" rx="${radius + 3}" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="2"/></svg>`,
-    );
-
     const file = `${OUT_DIR}/splash-${W}x${H}.png`;
     await sharp({ create: { width: W, height: H, channels: 4, background: BG } })
       .composite([
         { input: icon, gravity: "center" },
-        { input: ring, gravity: "center" },
       ])
       .png()
       .toFile(file);

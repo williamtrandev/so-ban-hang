@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import { formatVnd } from "@/lib/domain/types";
+import { Logo } from "@/components/logo";
 
 const PRODUCT_CHIPS = [
   { label: "Nem", giaBan: 35000, className: "top-[14%] left-[8%]", delay: 0 },
@@ -25,9 +26,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         />
         <div className="relative flex h-full flex-col justify-between p-12 xl:p-16">
           <span className="flex items-center gap-2 font-heading text-sm font-semibold tracking-tight">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-              NB
-            </span>
+            <Logo className="size-9 shadow-sm" />
             Sổ bán hàng
           </span>
 

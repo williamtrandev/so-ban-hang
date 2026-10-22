@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Logo } from "@/components/logo";
 import { AuthShell } from "@/components/auth-shell";
 import { GoogleIcon } from "@/components/google-icon";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,7 @@ export default function DangNhapPage() {
     <AuthShell>
       <Card className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
         <CardHeader>
-          <div className="mb-1 flex size-10 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground lg:hidden">
-            NB
-          </div>
+          <Logo className="mb-1 size-11 shadow-sm lg:hidden" />
           <CardTitle className="text-xl">Đăng nhập</CardTitle>
           <CardDescription>Quản lý bán nem, bì, chả lụa</CardDescription>
         </CardHeader>

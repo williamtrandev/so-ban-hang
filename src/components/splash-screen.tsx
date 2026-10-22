@@ -3,7 +3,7 @@
 // trong lúc (app)/layout còn chờ auth + profile phía server.
 // Markup tĩnh thuần server: stream ngay trong HTML đầu tiên, không cần JS.
 // Khớp từng pixel với ảnh khởi động iOS (scripts/generate-splash.mjs): nền
-// #0a0a0a, icon 24% cạnh ngắn ở chính giữa, viền mờ -> chuyển từ ảnh native
+// #0a0a0a, logo 24% cạnh ngắn ở chính giữa -> chuyển từ ảnh native
 // sang HTML không bị nháy hay nhảy vị trí.
 export function SplashScreen() {
   return (
@@ -13,11 +13,7 @@ export function SplashScreen() {
       className="fixed inset-0 z-50 bg-[#0a0a0a] text-white"
     >
       <div className="absolute top-1/2 left-1/2 size-[24vmin] -translate-x-1/2 -translate-y-1/2">
-        <img src="/icons/icon-512.png" alt="" className="size-full rounded-[22%]" />
-        <span
-          aria-hidden
-          className="absolute -inset-[1.5px] rounded-[calc(24vmin*0.22+1.5px)] border border-white/12"
-        />
+        <img src="/icons/icon-512.png" alt="" className="size-full" />
       </div>
 
       <div className="absolute inset-x-0 top-[calc(50%+12vmin+2rem)] flex flex-col items-center gap-3">
