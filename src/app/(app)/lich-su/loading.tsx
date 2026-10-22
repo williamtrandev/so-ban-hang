@@ -18,6 +18,15 @@ export default function Loading() {
       </div>
 
       <Card>
+        <CardContent className="flex flex-col gap-3">
+          <Skeleton className="h-5 w-40" />
+          {[0, 1].map((i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardContent className="flex flex-col gap-2 px-3">
           <Skeleton className="h-4 w-28" />
           {[0, 1, 2, 3, 4].map((i) => (

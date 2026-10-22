@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { PencilLine, Wallet, History, Users, Settings, LogOut, type LucideIcon } from "lucide-react";
+import { PencilLine, History, Users, Settings, LogOut, type LucideIcon } from "lucide-react";
 import { signOut } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -22,8 +22,7 @@ type NavLink = { href: string; label: string; icon: LucideIcon; secondary?: bool
 
 const LINKS: NavLink[] = [
   { href: "/nhap-don", label: "Nhập đơn", icon: PencilLine },
-  { href: "/quyet-toan", label: "Quyết toán", icon: Wallet },
-  { href: "/lich-su", label: "Lịch sử", icon: History, secondary: true },
+  { href: "/lich-su", label: "Lịch sử", icon: History },
   { href: "/cai-dat", label: "Cài đặt", icon: Settings, secondary: true },
 ];
 

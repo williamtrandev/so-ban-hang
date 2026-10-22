@@ -30,7 +30,7 @@ export async function closeSettlement(expected: {
   const current = pending.filter((o) => o.dot === round);
   const totals = calcTotals(current);
   if (current.length !== expected.count || totals.tienBan !== expected.tienBan) {
-    revalidatePath("/quyet-toan");
+    revalidatePath("/lich-su");
     return {
       error: `Đơn trong đợt vừa thay đổi (giờ có ${current.length} đơn). Xem lại số mới rồi quyết toán.`,
       settledAt: null,
@@ -63,7 +63,7 @@ export async function closeSettlement(expected: {
 
   if (updateError) return { error: updateError.message, settledAt: null };
 
-  revalidatePath("/quyet-toan");
+  revalidatePath("/lich-su");
   revalidatePath("/nhap-don");
   return { error: null, settledAt: Date.now() };
 }
@@ -107,6 +107,6 @@ export async function updatePrices(
   if (error) return { error: error.message, saved: false };
 
   revalidatePath("/nhap-don");
-  revalidatePath("/quyet-toan");
+  revalidatePath("/lich-su");
   return { error: null, saved: true };
 }

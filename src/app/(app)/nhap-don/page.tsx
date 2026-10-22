@@ -1,6 +1,6 @@
 import { Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getSessionUser } from "@/lib/auth";
+import { getProfile, getSessionUser } from "@/lib/auth";
 import { getCurrentPrices, getPendingOrders } from "@/lib/domain/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PendingOrdersTable } from "./pending-orders-table";
@@ -8,12 +8,14 @@ import { QuickInputTabs } from "./quick-input-tabs";
 import { OrdersProvider } from "./orders-provider";
 import { RoundSwitcher } from "./round-switcher";
 import { OrderStats } from "./order-stats";
+import { SettleButton } from "./settle-button";
 import { ContentReveal } from "@/components/page-transition";
 
 export default async function NhapDonPage() {
   const supabase = await createClient();
-  const [user, prices, orders] = await Promise.all([
+  const [user, profile, prices, orders] = await Promise.all([
     getSessionUser(),
+    getProfile(),
     getCurrentPrices(supabase),
     getPendingOrders(supabase),
   ]);
@@ -27,9 +29,12 @@ export default async function NhapDonPage() {
           <RoundSwitcher />
         </header>
 
-        <OrderStats />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <OrderStats />
+          <SettleButton prices={prices} isAdmin={profile?.role === "admin"} />
+        </div>
 
-        <Card className="">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="size-4 text-primary" />
@@ -41,7 +46,7 @@ export default async function NhapDonPage() {
           </CardContent>
         </Card>
 
-        <Card className="">
+        <Card>
           <CardHeader>
             <CardTitle>Danh sách đơn</CardTitle>
           </CardHeader>

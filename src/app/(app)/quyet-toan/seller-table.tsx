@@ -45,15 +45,20 @@ function Money({ label, value, profit }: { label: string; value: number; profit?
   );
 }
 
+// Không truyền allTime thì ẩn tab (dùng trong hộp xem trước quyết toán).
 export function SellerTable({
   current,
   allTime,
+  title = "Theo người bán",
+  defaultTab = "dot",
 }: {
   current: SellerBreakdownRow[];
-  allTime: SellerBreakdownRow[];
+  allTime?: SellerBreakdownRow[];
+  title?: string;
+  defaultTab?: Tab;
 }) {
-  const [tab, setTab] = useState<Tab>("dot");
-  const rows = tab === "dot" ? current : allTime;
+  const [tab, setTab] = useState<Tab>(defaultTab);
+  const rows = tab === "all" && allTime ? allTime : current;
   const total = rows.reduce(
     (a, r) => ({ goc: a.goc + r.tienGoc, ban: a.ban + r.tienBan, loi: a.loi + r.tienLoi }),
     { goc: 0, ban: 0, loi: 0 },
@@ -64,8 +69,9 @@ export function SellerTable({
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-heading text-base font-medium whitespace-nowrap">
           <Users className="size-4 text-muted-foreground" strokeWidth={1.75} />
-          Theo người bán
+          {title}
         </h2>
+        {allTime && (
         <div className="flex gap-0.5 rounded-lg bg-muted p-0.5 dark:bg-background/60">
           {(
             [
@@ -90,6 +96,7 @@ export function SellerTable({
             </button>
           ))}
         </div>
+        )}
       </div>
 
       {rows.length === 0 ? (
