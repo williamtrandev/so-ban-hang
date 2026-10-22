@@ -15,15 +15,14 @@ export function HistorySummary({ settlements }: { settlements: SettlementRow[] }
 
   return (
     <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
-      {stats.map((s, i) => (
+      {stats.map((s) => (
         <div
           key={s.label}
-          className={`flex min-w-0 flex-col gap-2 rounded-xl p-3.5 ring-1 animate-in fade-in slide-in-from-bottom-2 ${
+          className={`flex min-w-0 flex-col gap-2 rounded-xl p-3.5 ring-1 ${
             s.accent
               ? "bg-gradient-to-br from-primary/15 to-primary/5 ring-primary/20"
               : "bg-card ring-foreground/10"
           }`}
-          style={{ animationDelay: `${i * 60}ms`, animationFillMode: "backwards" }}
         >
           <dt
             className={`flex items-center gap-1.5 text-xs ${s.accent ? "font-medium text-primary" : "text-muted-foreground"}`}

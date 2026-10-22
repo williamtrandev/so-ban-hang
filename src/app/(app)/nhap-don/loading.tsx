@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonTransition } from "@/components/page-transition";
 
 export default function Loading() {
   return (
+    <SkeletonTransition>
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:gap-5">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Skeleton className="h-8 w-36" />
@@ -37,5 +39,6 @@ export default function Loading() {
         </CardContent>
       </Card>
     </div>
+    </SkeletonTransition>
   );
 }

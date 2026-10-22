@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Landmark } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PaymentSettingsForm, type PaymentSettings } from "./payment-settings-form";
+import { ContentReveal } from "@/components/page-transition";
 
 export default async function CaiDatPage() {
   const supabase = await createClient();
@@ -17,6 +18,7 @@ export default async function CaiDatPage() {
     .single();
 
   return (
+    <ContentReveal>
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-7">
       <header className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20">
@@ -33,5 +35,6 @@ export default async function CaiDatPage() {
 
       <PaymentSettingsForm initial={(profile ?? {}) as PaymentSettings} />
     </div>
+    </ContentReveal>
   );
 }

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { SettlementPanel } from "./settlement-panel";
 import { SellerRevenueList } from "./seller-revenue-list";
+import { ContentReveal } from "@/components/page-transition";
 
 export default async function QuyetToanPage() {
   const supabase = await createClient();
@@ -82,9 +83,10 @@ export default async function QuyetToanPage() {
     },
   ];
 
+  // xl: trang khoá đúng chiều cao viewport (trừ navbar + padding main), list dài
+  // scroll bên trong card thay vì scroll cả trang.
   return (
-    // xl: trang khoá đúng chiều cao viewport (trừ navbar + padding main), list dài
-    // scroll bên trong card thay vì scroll cả trang.
+    <ContentReveal>
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:gap-5 xl:h-[calc(100dvh-7.5rem)]">
       <header className="flex shrink-0 flex-col gap-1">
         <h1 className="font-heading text-2xl font-semibold tracking-tight">Quyết toán</h1>
@@ -94,18 +96,14 @@ export default async function QuyetToanPage() {
       </header>
 
       <dl className="grid shrink-0 grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
-        {allTimeStats.map((s, i) => (
+        {allTimeStats.map((s) => (
           <div
             key={s.label}
-            className={`flex items-center gap-3 rounded-xl p-3.5 ring-1 animate-in fade-in slide-in-from-bottom-2 ${
+            className={`flex items-center gap-3 rounded-xl p-3.5 ring-1 ${
               s.highlight
                 ? "col-span-2 bg-gradient-to-br from-primary/15 to-primary/5 ring-primary/20 sm:col-span-1"
                 : "bg-card ring-foreground/10"
             }`}
-            style={{
-              animationDelay: `${i * 60}ms`,
-              animationFillMode: "backwards",
-            }}
           >
             <span
               className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
@@ -142,7 +140,7 @@ export default async function QuyetToanPage() {
       </dl>
 
       <div className="grid grid-cols-1 gap-4 md:gap-5 xl:min-h-0 xl:flex-1 xl:grid-cols-12 xl:items-stretch">
-        <Card className="xl:col-span-7 xl:flex xl:min-h-0 xl:flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
+        <Card className="xl:col-span-7 xl:flex xl:min-h-0 xl:flex-col">
           <CardHeader>
             <CardTitle>Quyết toán đợt hiện tại</CardTitle>
             {nextBatchCount > 0 && (
@@ -162,7 +160,7 @@ export default async function QuyetToanPage() {
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-5 xl:flex xl:min-h-0 xl:flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:100ms] [animation-fill-mode:backwards]">
+        <Card className="xl:col-span-5 xl:flex xl:min-h-0 xl:flex-col">
           <CardHeader>
             <CardTitle>Doanh thu theo người bán</CardTitle>
             <CardDescription>
@@ -175,5 +173,6 @@ export default async function QuyetToanPage() {
         </Card>
       </div>
     </div>
+    </ContentReveal>
   );
 }

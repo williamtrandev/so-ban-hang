@@ -1,8 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonTransition } from "@/components/page-transition";
 
 export default function Loading() {
   return (
+    <SkeletonTransition>
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-5">
       <header className="flex flex-col gap-2">
         <Skeleton className="h-7 w-48" />
@@ -24,5 +26,6 @@ export default function Loading() {
         </CardContent>
       </Card>
     </div>
+    </SkeletonTransition>
   );
 }

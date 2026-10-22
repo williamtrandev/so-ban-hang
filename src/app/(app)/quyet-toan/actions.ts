@@ -10,7 +10,12 @@ export interface CloseSettlementState {
   settledAt: number | null;
 }
 
-export async function closeSettlement(): Promise<CloseSettlementState> {
+// expected = số liệu người dùng đang thấy khi bấm xác nhận. Lệch (có người vừa
+// thêm/sửa đơn) thì không chốt, để họ xem lại số mới.
+export async function closeSettlement(expected: {
+  count: number;
+  tienBan: number;
+}): Promise<CloseSettlementState> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,6 +29,13 @@ export async function closeSettlement(): Promise<CloseSettlementState> {
   const round = currentRound(pending);
   const current = pending.filter((o) => o.dot === round);
   const totals = calcTotals(current);
+  if (current.length !== expected.count || totals.tienBan !== expected.tienBan) {
+    revalidatePath("/quyet-toan");
+    return {
+      error: `Đơn trong đợt vừa thay đổi (giờ có ${current.length} đơn). Xem lại số mới rồi quyết toán.`,
+      settledAt: null,
+    };
+  }
 
   const { data: settlement, error: settlementError } = await supabase
     .from("settlements")
@@ -44,7 +56,10 @@ export async function closeSettlement(): Promise<CloseSettlementState> {
     .from("orders")
     .update({ settlement_id: settlement.id })
     .is("settlement_id", null)
-    .eq("dot", round);
+    .in(
+      "id",
+      current.map((o) => o.id),
+    );
 
   if (updateError) return { error: updateError.message, settledAt: null };
 

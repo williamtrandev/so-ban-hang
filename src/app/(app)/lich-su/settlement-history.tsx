@@ -78,7 +78,6 @@ export function SettlementHistory({ settlements }: { settlements: SettlementRow[
   }
 
   const groups = groupByMonth(settlements);
-  let index = 0;
 
   return (
     <>
@@ -104,17 +103,12 @@ export function SettlementHistory({ settlements }: { settlements: SettlementRow[
             <ul className="flex flex-col">
               {g.items.map((item) => {
                 const { s, d, dot } = item;
-                const i = index++;
                 return (
                   <li key={s.id}>
                     <button
                       type="button"
                       onClick={() => openDetail(item)}
-                      className={`${ROW_GRID} group w-full rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-muted/50 active:bg-muted/70 focus-visible:bg-muted/50 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-1 duration-300`}
-                      style={{
-                        animationDelay: `${Math.min(i, 10) * 35}ms`,
-                        animationFillMode: "backwards",
-                      }}
+                      className={`${ROW_GRID} group w-full rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-muted/50 active:bg-muted/70 focus-visible:bg-muted/50 focus-visible:outline-none`}
                     >
                       <span className="flex size-11 flex-col items-center justify-center rounded-xl bg-muted/60 leading-none ring-1 ring-foreground/5 transition-colors group-hover:bg-card dark:group-hover:bg-muted">
                         <span className="text-base font-semibold tabular-nums">{d.day}</span>

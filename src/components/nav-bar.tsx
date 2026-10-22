@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
@@ -33,9 +34,13 @@ const ADMIN_LINKS: NavLink[] = [
 export function NavBar({ fullName, role }: { fullName: string; role: string }) {
   const pathname = usePathname();
   const links = role === "admin" ? [...LINKS, ...ADMIN_LINKS] : LINKS;
+  // Bấm là pill nhảy sang tab mới ngay, không đợi trang tải xong.
+  const [clicked, setClicked] = useState<{ href: string; from: string } | null>(null);
+  const pendingHref = clicked && clicked.from === pathname ? clicked.href : null;
+  const currentIndex = links.findIndex((l) => pathname?.startsWith(l.href));
 
   return (
-    <header className="sticky top-3 z-40 px-3 md:top-4 md:px-4">
+    <header className="sticky top-3 z-40 px-3 md:top-4 md:px-4" style={{ viewTransitionName: "site-header" }}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 rounded-2xl border border-foreground/10 bg-background/80 px-2 shadow-[0_12px_32px_-16px_color-mix(in_oklch,var(--foreground)_30%,transparent),inset_0_1px_0_color-mix(in_oklch,var(--foreground)_6%,transparent)] backdrop-blur-xl md:gap-4 md:px-4">
         <div className="flex min-w-0 items-center gap-1.5 md:gap-4">
           <Link href="/nhap-don" className="flex shrink-0 items-center gap-2.5">
@@ -48,14 +53,18 @@ export function NavBar({ fullName, role }: { fullName: string; role: string }) {
           </Link>
           <span className="hidden h-5 w-px bg-border sm:block" aria-hidden="true" />
           <nav className="flex items-center gap-0.5 md:gap-1">
-            {links.map((link) => {
-              const active = pathname?.startsWith(link.href);
+            {links.map((link, i) => {
+              const active = pendingHref ? link.href === pendingHref : pathname?.startsWith(link.href);
               const Icon = link.icon;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   title={link.label}
+                  transitionTypes={[i > currentIndex ? "nav-forward" : "nav-back"]}
+                  onClick={() => {
+                    if (!pathname?.startsWith(link.href)) setClicked({ href: link.href, from: pathname ?? "" });
+                  }}
                   className={cn(
                     "relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors md:px-3 md:text-sm",
                     active ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",

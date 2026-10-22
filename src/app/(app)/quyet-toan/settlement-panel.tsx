@@ -38,9 +38,11 @@ export function SettlementPanel({
 
   function handleConfirmSettle() {
     startTransition(async () => {
-      const result = await closeSettlement();
+      const result = await closeSettlement({ count: pendingCount, tienBan: totals.tienBan });
       if (result.error) {
         toast.error(result.error);
+        setConfirmOpen(false);
+        router.refresh();
         return;
       }
       setConfirmOpen(false);

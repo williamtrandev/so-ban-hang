@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { UserList, type UserRow } from "./user-list";
+import { ContentReveal } from "@/components/page-transition";
 
 const STATUS_ORDER: Record<UserRow["status"], number> = {
   pending: 0,
@@ -36,6 +37,7 @@ export default async function NguoiDungPage() {
   const pendingCount = users.filter((u) => u.status === "pending").length;
 
   return (
+    <ContentReveal>
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="font-heading text-2xl font-semibold tracking-tight">Người dùng</h1>
@@ -48,5 +50,6 @@ export default async function NguoiDungPage() {
 
       <UserList users={users} currentUserId={user.id} />
     </div>
+    </ContentReveal>
   );
 }

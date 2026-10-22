@@ -7,6 +7,7 @@ import { QuickInputTabs } from "./quick-input-tabs";
 import { OrdersProvider } from "./orders-provider";
 import { RoundSwitcher } from "./round-switcher";
 import { OrderStats } from "./order-stats";
+import { ContentReveal } from "@/components/page-transition";
 
 export default async function NhapDonPage() {
   const supabase = await createClient();
@@ -21,6 +22,7 @@ export default async function NhapDonPage() {
   ]);
 
   return (
+    <ContentReveal>
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 pb-24 md:gap-5 md:pb-8">
       <OrdersProvider orders={orders} currentUserId={user!.id} suggestions={suggestions}>
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -30,7 +32,7 @@ export default async function NhapDonPage() {
 
         <OrderStats />
 
-        <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:100ms] [animation-fill-mode:backwards]">
+        <Card className="">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="size-4 text-primary" />
@@ -42,7 +44,7 @@ export default async function NhapDonPage() {
           </CardContent>
         </Card>
 
-        <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:150ms] [animation-fill-mode:backwards]">
+        <Card className="">
           <CardHeader>
             <CardTitle>Danh sách đơn</CardTitle>
           </CardHeader>
@@ -52,5 +54,6 @@ export default async function NhapDonPage() {
         </Card>
       </OrdersProvider>
     </div>
+    </ContentReveal>
   );
 }
