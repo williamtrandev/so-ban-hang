@@ -116,7 +116,7 @@ export function PaymentSettingsForm({ initial }: { initial: PaymentSettings }) {
               value={bin}
               onChange={(e) => setBin(e.target.value)}
               className={cn(
-                "h-11 w-full appearance-none rounded-xl border border-input bg-transparent pr-10 pl-3.5 text-sm outline-none transition-colors hover:border-primary/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30",
+                "h-11 w-full appearance-none rounded-xl border border-input bg-card pr-10 pl-3.5 text-sm outline-none transition-colors hover:border-primary/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30",
               )}
             >
               <option value="">— Chọn ngân hàng —</option>

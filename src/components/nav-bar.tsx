@@ -25,7 +25,7 @@ const LINKS: NavLink[] = [
   { href: "/cai-dat", label: "Cài đặt", icon: Settings, secondary: true },
 ];
 
-// secondary: label chỉ hiện trên desktop, mobile gọn còn icon để khỏi tràn header.
+// secondary: label chỉ hiện trên desktop. Mobile chỉ hiện chữ cho mục đang mở để khỏi tràn header.
 const ADMIN_LINKS: NavLink[] = [
   { href: "/nguoi-dung", label: "Người dùng", icon: Users, secondary: true },
 ];
@@ -69,7 +69,12 @@ export function NavBar({ fullName, role }: { fullName: string; role: string }) {
                     />
                   )}
                   <Icon className="relative size-4 shrink-0" strokeWidth={1.75} />
-                  <span className={cn("relative", link.secondary && "hidden md:inline")}>
+                  <span
+                    className={cn(
+                      "relative",
+                      link.secondary ? "hidden md:inline" : !active && "hidden sm:inline",
+                    )}
+                  >
                     {link.label}
                   </span>
                 </Link>

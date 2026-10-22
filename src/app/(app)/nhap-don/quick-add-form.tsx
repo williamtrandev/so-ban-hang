@@ -228,7 +228,7 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
         {PRODUCTS.map((p) => (
           <div
             key={p.label}
-            className="flex flex-col gap-1.5 rounded-xl border border-border/70 bg-muted/20 p-2"
+            className="flex flex-col gap-1.5 rounded-xl border border-border/60 bg-muted/50 p-2 dark:bg-muted/30"
           >
             <span className="truncate px-0.5 text-xs font-medium text-muted-foreground">{p.label}</span>
             <div className="flex gap-1.5">
@@ -244,7 +244,7 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
                         "flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg text-sm font-medium tabular-nums transition-colors select-none active:scale-[0.97]",
                         n > 0
                           ? "rounded-r-none bg-primary text-primary-foreground"
-                          : "bg-background ring-1 ring-border hover:ring-primary/40",
+                          : "bg-card shadow-xs ring-1 ring-border hover:ring-primary/40 dark:bg-muted dark:shadow-none",
                       )}
                     >
                       {n > 0 ? (

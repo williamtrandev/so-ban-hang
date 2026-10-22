@@ -25,7 +25,7 @@ function Segment({
       className={cn(
         "relative flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm sm:flex-none font-medium whitespace-nowrap transition-all select-none",
         active
-          ? "bg-background text-foreground shadow-sm ring-1 ring-foreground/10"
+          ? "bg-card text-foreground shadow-sm ring-1 ring-foreground/10 dark:bg-muted"
           : "text-muted-foreground hover:text-foreground",
       )}
     >
@@ -50,7 +50,7 @@ export function RoundSwitcher() {
 
   return (
     <div className="flex flex-col gap-1.5 sm:items-end">
-      <div className="flex w-full gap-1 rounded-xl bg-muted p-1 sm:w-auto">
+      <div className="flex w-full gap-1 rounded-xl bg-muted p-1 sm:w-auto dark:bg-card dark:ring-1 dark:ring-border">
         <Segment
           active={!viewNext}
           onClick={() => setViewNext(false)}

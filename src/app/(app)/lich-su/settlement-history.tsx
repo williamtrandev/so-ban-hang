@@ -116,7 +116,7 @@ export function SettlementHistory({ settlements }: { settlements: SettlementRow[
                         animationFillMode: "backwards",
                       }}
                     >
-                      <span className="flex size-11 flex-col items-center justify-center rounded-xl bg-muted/60 leading-none ring-1 ring-foreground/5 transition-colors group-hover:bg-background">
+                      <span className="flex size-11 flex-col items-center justify-center rounded-xl bg-muted/60 leading-none ring-1 ring-foreground/5 transition-colors group-hover:bg-card dark:group-hover:bg-muted">
                         <span className="text-base font-semibold tabular-nums">{d.day}</span>
                         <span className="mt-1 text-[10px] font-medium text-muted-foreground uppercase">
                           Th{d.month}
