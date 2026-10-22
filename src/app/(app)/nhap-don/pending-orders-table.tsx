@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ReceiptText, Trash2, Pencil, Search, Repeat2, X } from "lucide-react";
 import { deleteOrder } from "./actions";
@@ -29,7 +29,6 @@ import { PaymentQrButton } from "./payment-qr-dialog";
 import { SoLuongChips } from "@/components/soluong-chips";
 import {
   formatVnd,
-  formatDateTime,
   calcTotals,
   calcProductTotals,
   orderTienBan,
@@ -40,6 +39,36 @@ import {
 import { cn } from "@/lib/utils";
 
 const UNDO_MS = 5000;
+const PAGE = 20;
+const TZ = "Asia/Ho_Chi_Minh";
+
+const dayKeyFmt = new Intl.DateTimeFormat("en-CA", { timeZone: TZ });
+const timeFmt = new Intl.DateTimeFormat("vi-VN", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false });
+const dayLabelFmt = new Intl.DateTimeFormat("vi-VN", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit" });
+
+function dayLabel(key: string, sample: string): string {
+  const today = dayKeyFmt.format(new Date());
+  const yesterday = dayKeyFmt.format(new Date(Date.now() - 86_400_000));
+  if (key === today) return "Hôm nay";
+  if (key === yesterday) return "Hôm qua";
+  const s = dayLabelFmt.format(new Date(sample));
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Đơn đã sắp mới nhất trước; gom liên tiếp theo ngày (giờ VN).
+function groupByDay(orders: OrderRow[]) {
+  const groups: { key: string; label: string; orders: OrderRow[] }[] = [];
+  for (const o of orders) {
+    const key = dayKeyFmt.format(new Date(o.created_at));
+    let g = groups.at(-1);
+    if (!g || g.key !== key) {
+      g = { key, label: dayLabel(key, o.created_at), orders: [] };
+      groups.push(g);
+    }
+    g.orders.push(o);
+  }
+  return groups;
+}
 
 function StatusPair({ order }: { order: OrderRow }) {
   return (
@@ -175,6 +204,10 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
     setSellerView,
   } = useOrders();
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
+  // Đổi bộ lọc thì quay về trang đầu; thêm/sửa đơn thì giữ nguyên số đang xem.
+  const filterKey = [search, sellerView, ...statusFilters, viewNext].join("|");
+  const [page, setPage] = useState({ key: filterKey, limit: PAGE });
+  const limit = page.key === filterKey ? page.limit : PAGE;
 
   // Người khác có đơn trong đợt (mình đã có chip "Của tôi" riêng).
   const others = useMemo(() => {
@@ -289,100 +322,166 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
         </div>
       ) : (
         <>
-          {/* Mobile: card list */}
-          <ul className="flex flex-col gap-2.5 md:hidden">
-            {filteredOrders.map((order, i) => {
-              const tmp = order.id.startsWith(TMP_PREFIX);
+          {(() => {
+            const shown = filteredOrders.slice(0, limit);
+            const dayTotals = new Map<string, { count: number; tien: number }>();
+            for (const o of filteredOrders) {
+              const k = dayKeyFmt.format(new Date(o.created_at));
+              const t = dayTotals.get(k) ?? { count: 0, tien: 0 };
+              t.count += 1;
+              t.tien += orderTienBan(o);
+              dayTotals.set(k, t);
+            }
+            const groups = groupByDay(shown);
+            const seller = (o: OrderRow) =>
+              o.seller_id === currentUserId ? "Tôi" : (o.profiles?.full_name ?? "—");
+            const DayHeader = ({ g }: { g: (typeof groups)[number] }) => {
+              const t = dayTotals.get(g.key)!;
               return (
-                <li
-                  key={order.id}
-                  className={cn(
-                    "flex flex-col gap-2.5 rounded-xl border border-border/70 bg-card p-3 animate-in fade-in slide-in-from-bottom-1 duration-300",
-                    !order.da_thanh_toan && "border-l-[3px] border-l-warning/70",
-                    tmp && "animate-pulse opacity-60",
-                  )}
-                  style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-col">
-                      <span className="truncate font-medium">{order.ten_nguoi_mua}</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {order.profiles?.full_name ?? "—"} · {formatDateTime(order.created_at)}
-                      </span>
-                    </div>
-                    <span className="shrink-0 font-semibold tabular-nums">
-                      {formatVnd(orderTienBan(order))}
-                    </span>
-                  </div>
-                  <SoLuongChips q={order} />
-                  {order.ghi_chu && <p className="text-xs text-muted-foreground italic">{order.ghi_chu}</p>}
-                  <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-2.5">
-                    <StatusPair order={order} />
-                    <RowActions order={order} onEdit={setEditingOrder} />
-                  </div>
-                </li>
+                <div className="flex items-baseline justify-between gap-2 text-xs">
+                  <span className="font-medium text-foreground/80" suppressHydrationWarning>
+                    {g.label}
+                  </span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {t.count} đơn · {formatVnd(t.tien)}
+                  </span>
+                </div>
               );
-            })}
-          </ul>
+            };
 
-          {/* Desktop: table */}
-          <div className="hidden overflow-hidden rounded-xl border border-border/60 md:block">
-            <Table>
-              <TableHeader className="bg-muted/40">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="h-9 text-xs text-muted-foreground">Người mua</TableHead>
-                  <TableHead className="h-9 text-xs text-muted-foreground">Số lượng</TableHead>
-                  <TableHead className="h-9 text-xs text-muted-foreground">Trạng thái</TableHead>
-                  <TableHead className="h-9 text-right text-xs text-muted-foreground">Tiền bán</TableHead>
-                  <TableHead className="h-9 w-36" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order, i) => {
-                  const tmp = order.id.startsWith(TMP_PREFIX);
-                  return (
-                    <TableRow
-                      key={order.id}
-                      className={cn(
-                        "border-border/60 animate-in fade-in slide-in-from-left-1 duration-300",
-                        tmp && "animate-pulse opacity-60",
-                      )}
-                      style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
-                    >
-                      <TableCell
-                        className={cn(
-                          "max-w-64 whitespace-normal",
-                          !order.da_thanh_toan && "shadow-[inset_3px_0_0_var(--color-warning)]",
-                        )}
-                      >
-                        <div className="font-medium">{order.ten_nguoi_mua}</div>
-                        <div className="text-xs text-muted-foreground tabular-nums">
-                          {order.profiles?.full_name ?? "—"} · {formatDateTime(order.created_at)}
-                        </div>
-                        {order.ghi_chu && (
-                          <div className="mt-0.5 text-xs text-muted-foreground italic">{order.ghi_chu}</div>
-                        )}
-                      </TableCell>
-                      <TableCell className="whitespace-normal">
-                        <SoLuongChips q={order} />
-                      </TableCell>
-                      <TableCell>
-                        <StatusPair order={order} />
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {formatVnd(orderTienBan(order))}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end">
-                          <RowActions order={order} onEdit={setEditingOrder} />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+            return (
+              <>
+                {/* Mobile: card list */}
+                <div className="flex flex-col gap-4 md:hidden">
+                  {groups.map((g) => (
+                    <section key={g.key} className="flex flex-col gap-2">
+                      <div className="px-1">
+                        <DayHeader g={g} />
+                      </div>
+                      <ul className="flex flex-col gap-2">
+                        {g.orders.map((order) => {
+                          const tmp = order.id.startsWith(TMP_PREFIX);
+                          return (
+                            <li
+                              key={order.id}
+                              className={cn(
+                                "flex flex-col gap-2 rounded-xl border border-border/70 bg-card p-3 animate-in fade-in duration-300",
+                                !order.da_thanh_toan && "border-l-[3px] border-l-warning/70",
+                                tmp && "animate-pulse opacity-60",
+                              )}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 flex-col">
+                                  <span className="truncate font-medium">{order.ten_nguoi_mua}</span>
+                                  <span className="truncate text-xs text-muted-foreground tabular-nums">
+                                    {seller(order)} · {timeFmt.format(new Date(order.created_at))}
+                                  </span>
+                                </div>
+                                <span className="shrink-0 font-semibold tabular-nums">
+                                  {formatVnd(orderTienBan(order))}
+                                </span>
+                              </div>
+                              <SoLuongChips q={order} />
+                              {order.ghi_chu && (
+                                <p className="text-xs text-muted-foreground italic">{order.ghi_chu}</p>
+                              )}
+                              <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-2">
+                                <StatusPair order={order} />
+                                <RowActions order={order} onEdit={setEditingOrder} />
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden overflow-hidden rounded-xl border border-border/60 md:block">
+                  <Table>
+                    <TableHeader className="bg-muted/40">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="h-9 text-xs text-muted-foreground">Người mua</TableHead>
+                        <TableHead className="h-9 text-xs text-muted-foreground">Số lượng</TableHead>
+                        <TableHead className="h-9 text-xs text-muted-foreground">Trạng thái</TableHead>
+                        <TableHead className="h-9 text-right text-xs text-muted-foreground">Tiền bán</TableHead>
+                        <TableHead className="h-9 w-36" />
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {groups.map((g) => (
+                        <Fragment key={g.key}>
+                          <TableRow className="border-border/60 bg-muted/25 hover:bg-muted/25">
+                            <TableCell colSpan={5} className="py-1.5">
+                              <DayHeader g={g} />
+                            </TableCell>
+                          </TableRow>
+                          {g.orders.map((order) => {
+                            const tmp = order.id.startsWith(TMP_PREFIX);
+                            return (
+                              <TableRow
+                                key={order.id}
+                                className={cn(
+                                  "border-border/60 animate-in fade-in duration-300",
+                                  tmp && "animate-pulse opacity-60",
+                                )}
+                              >
+                                <TableCell
+                                  className={cn(
+                                    "max-w-64 py-2 whitespace-normal",
+                                    !order.da_thanh_toan && "shadow-[inset_3px_0_0_var(--color-warning)]",
+                                  )}
+                                >
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="truncate font-medium">{order.ten_nguoi_mua}</span>
+                                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                                      {seller(order)} · {timeFmt.format(new Date(order.created_at))}
+                                    </span>
+                                  </div>
+                                  {order.ghi_chu && (
+                                    <div className="text-xs text-muted-foreground italic">{order.ghi_chu}</div>
+                                  )}
+                                </TableCell>
+                                <TableCell className="py-2 whitespace-normal">
+                                  <SoLuongChips q={order} />
+                                </TableCell>
+                                <TableCell className="py-2">
+                                  <StatusPair order={order} />
+                                </TableCell>
+                                <TableCell className="py-2 text-right font-medium tabular-nums">
+                                  {formatVnd(orderTienBan(order))}
+                                </TableCell>
+                                <TableCell className="py-1.5">
+                                  <div className="flex justify-end">
+                                    <RowActions order={order} onEdit={setEditingOrder} />
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </Fragment>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {filteredOrders.length > limit && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setPage({ key: filterKey, limit: limit + PAGE })}
+                  >
+                    Xem thêm {Math.min(PAGE, filteredOrders.length - limit)} đơn
+                    <span className="text-muted-foreground tabular-nums">
+                      (còn {filteredOrders.length - limit})
+                    </span>
+                  </Button>
+                )}
+              </>
+            );
+          })()}
         </>
       )}
 

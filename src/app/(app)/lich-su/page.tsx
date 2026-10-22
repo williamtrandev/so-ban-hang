@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSettlementHistory } from "@/lib/domain/data";
+import { getSessionUser } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { HistorySummary } from "./history-summary";
 import { SettlementHistory } from "./settlement-history";
@@ -7,7 +8,7 @@ import { ContentReveal } from "@/components/page-transition";
 
 export default async function LichSuPage() {
   const supabase = await createClient();
-  const history = await getSettlementHistory(supabase);
+  const [history, user] = await Promise.all([getSettlementHistory(supabase), getSessionUser()]);
 
   return (
     <ContentReveal>
@@ -23,9 +24,9 @@ export default async function LichSuPage() {
 
       {history.length > 0 && <HistorySummary settlements={history} />}
 
-      <Card className="">
+      <Card>
         <CardContent className="px-2 sm:px-3">
-          <SettlementHistory settlements={history} />
+          <SettlementHistory settlements={history} currentUserId={user?.id ?? ""} />
         </CardContent>
       </Card>
     </div>

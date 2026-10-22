@@ -59,6 +59,7 @@ export function SettlementDetailDialog({
   dot,
   orders,
   loading,
+  currentUserId,
   onOpenChange,
 }: {
   open: boolean;
@@ -66,6 +67,7 @@ export function SettlementDetailDialog({
   dot: number | null;
   orders: OrderRow[] | null;
   loading: boolean;
+  currentUserId: string;
   onOpenChange: (open: boolean) => void;
 }) {
   const stats = settlement
@@ -157,7 +159,7 @@ export function SettlementDetailDialog({
                         <div className="flex min-w-0 flex-col">
                           <span className="truncate font-medium">{order.ten_nguoi_mua}</span>
                           <span className="text-xs text-muted-foreground">
-                            {order.profiles?.full_name ?? "—"}
+                            {order.seller_id === currentUserId ? "Tôi" : (order.profiles?.full_name ?? "—")}
                           </span>
                         </div>
                         <span className="shrink-0 font-medium tabular-nums">
@@ -195,7 +197,7 @@ export function SettlementDetailDialog({
                             )}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {order.profiles?.full_name ?? "—"}
+                            {order.seller_id === currentUserId ? "Tôi" : (order.profiles?.full_name ?? "—")}
                           </TableCell>
                           <TableCell className="whitespace-normal">
                             <SoLuongChips q={order} />
