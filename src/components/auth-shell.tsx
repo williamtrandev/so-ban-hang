@@ -26,7 +26,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         />
         <div className="relative flex h-full flex-col justify-between p-12 xl:p-16">
           <span className="flex items-center gap-2 font-heading text-sm font-semibold tracking-tight">
-            <Logo className="size-9 shadow-sm" />
+            <Logo className="size-9 rounded-[22%] shadow-sm ring-1 ring-foreground/10" />
             Sổ bán hàng
           </span>
 

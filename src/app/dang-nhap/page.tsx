@@ -30,7 +30,7 @@ export default function DangNhapPage() {
     <AuthShell>
       <Card className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
         <CardHeader>
-          <Logo className="mb-1 size-11 shadow-sm lg:hidden" />
+          <Logo className="mb-1 size-11 rounded-[22%] shadow-sm ring-1 ring-foreground/10 lg:hidden" />
           <CardTitle className="text-xl">Đăng nhập</CardTitle>
           <CardDescription>Quản lý bán nem, bì, chả lụa</CardDescription>
         </CardHeader>

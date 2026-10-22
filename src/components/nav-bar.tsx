@@ -45,7 +45,7 @@ export function NavBar({ fullName, role }: { fullName: string; role: string }) {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 rounded-2xl border border-foreground/10 bg-background/80 px-2 shadow-[0_12px_32px_-16px_color-mix(in_oklch,var(--foreground)_30%,transparent),inset_0_1px_0_color-mix(in_oklch,var(--foreground)_6%,transparent)] backdrop-blur-xl md:gap-4 md:px-4">
         <div className="flex min-w-0 items-center gap-1.5 md:gap-4">
           <Link href="/nhap-don" className="flex shrink-0 items-center gap-2.5">
-            <Logo className="size-8 shadow-sm" />
+            <Logo className="size-8 rounded-[22%] shadow-sm ring-1 ring-foreground/10" />
             <span className="hidden font-heading text-sm font-semibold tracking-tight sm:inline">
               Sổ bán hàng
             </span>
