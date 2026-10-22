@@ -13,6 +13,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -81,13 +82,15 @@ function StatusPair({ order }: { order: OrderRow }) {
 
 function RowActions({ order, onEdit }: { order: OrderRow; onEdit: (order: OrderRow) => void }) {
   const { currentUserId, hide, unhide, setDraft } = useOrders();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Đơn tạm (đang lưu) chưa có id thật -> chưa thao tác được.
   if (order.id.startsWith(TMP_PREFIX)) return null;
   const mine = order.seller_id === currentUserId;
 
-  // Ẩn ngay, chỉ xoá thật khi hết thời gian hoàn tác.
+  // Đã xác nhận: ẩn ngay, vẫn cho hoàn tác 5s phòng bấm nhầm rồi mới xoá thật.
   function handleDelete() {
+    setConfirmOpen(false);
     hide(order.id);
     let settled = false;
     const commit = () => {
@@ -149,10 +152,39 @@ function RowActions({ order, onEdit }: { order: OrderRow; onEdit: (order: OrderR
             size="icon-sm"
             className="text-muted-foreground hover:text-destructive"
             aria-label="Xoá đơn"
-            onClick={handleDelete}
+            onClick={() => setConfirmOpen(true)}
           >
             <Trash2 />
           </Button>
+          <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <DialogContent className="sm:max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Xoá đơn này?</DialogTitle>
+                <DialogDescription>Đơn sẽ bị xoá khỏi đợt hiện tại.</DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-muted/30 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="min-w-0 truncate font-medium">{order.ten_nguoi_mua}</span>
+                  <span className="shrink-0 font-semibold tabular-nums">{formatVnd(orderTienBan(order))}</span>
+                </div>
+                <SoLuongChips q={order} />
+                {order.ghi_chu && <p className="text-xs text-muted-foreground italic">{order.ghi_chu}</p>}
+              </div>
+              <DialogFooter className="gap-2 sm:gap-2">
+                <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)}>
+                  Huỷ
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleDelete}
+                  className="bg-destructive text-white hover:bg-destructive/90"
+                >
+                  <Trash2 />
+                  Xoá đơn
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>
