@@ -49,16 +49,23 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Sổ bán hàng",
-    startupImage: SPLASH_DEVICES.flatMap(([w, h, r]) => [
-      {
-        url: `/splash/splash-${w * r}x${h * r}.png`,
-        media: `screen and (device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: portrait)`,
-      },
-      {
-        url: `/splash/splash-${h * r}x${w * r}.png`,
-        media: `screen and (device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: landscape)`,
-      },
-    ]),
+    // Ảnh khởi động theo chế độ sáng/tối của máy (iOS chưa biết theme chọn trong app).
+    startupImage: SPLASH_DEVICES.flatMap(([w, h, r]) =>
+      (["light", "dark"] as const).flatMap((scheme) => {
+        const prefix = scheme === "light" ? "splash-light" : "splash";
+        const device = `screen and (device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r})`;
+        return [
+          {
+            url: `/splash/${prefix}-${w * r}x${h * r}.png`,
+            media: `${device} and (orientation: portrait) and (prefers-color-scheme: ${scheme})`,
+          },
+          {
+            url: `/splash/${prefix}-${h * r}x${w * r}.png`,
+            media: `${device} and (orientation: landscape) and (prefers-color-scheme: ${scheme})`,
+          },
+        ];
+      }),
+    ),
   },
 };
 

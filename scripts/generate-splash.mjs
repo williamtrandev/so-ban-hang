@@ -1,10 +1,16 @@
 // Sinh ảnh splash iOS (apple-touch-startup-image) cho từng size máy.
-// Nền tối #0a0a0a khớp manifest background_color, logo (icon-512) đặt giữa.
+// 2 bộ ảnh: tối (splash-*.png) và sáng (splash-light-*.png), nền khớp --background
+// từng theme (THEME_COLOR trong src/lib/theme-init.ts); logo (icon-512) đặt giữa.
+// layout.tsx chọn bộ theo prefers-color-scheme của máy.
 // Chạy lại khi đổi icon: node scripts/generate-splash.mjs
 import sharp from "sharp";
 import { mkdir } from "node:fs/promises";
 
-const BG = "#0a0a0a";
+const VARIANTS = [
+  { prefix: "splash", bg: "#090d0b", ring: null },
+  // Logo nền kem trên nền sáng cần viền mảnh để không chìm.
+  { prefix: "splash-light", bg: "#f4f8f5", ring: "rgba(15,40,25,0.10)" },
+];
 const ICON = "public/icons/icon-512.png";
 const OUT_DIR = "public/splash";
 
@@ -54,14 +60,23 @@ async function main() {
       .png()
       .toBuffer();
 
-    const file = `${OUT_DIR}/splash-${W}x${H}.png`;
-    await sharp({ create: { width: W, height: H, channels: 4, background: BG } })
-      .composite([
-        { input: icon, gravity: "center" },
-      ])
-      .png()
-      .toFile(file);
-    console.log(file);
+    for (const v of VARIANTS) {
+      const layers = [{ input: icon, gravity: "center" }];
+      if (v.ring) {
+        layers.push({
+          input: Buffer.from(
+            `<svg width="${size}" height="${size}"><rect x="1" y="1" width="${size - 2}" height="${size - 2}" rx="${radius - 1}" fill="none" stroke="${v.ring}" stroke-width="2"/></svg>`,
+          ),
+          gravity: "center",
+        });
+      }
+      const file = `${OUT_DIR}/${v.prefix}-${W}x${H}.png`;
+      await sharp({ create: { width: W, height: H, channels: 4, background: v.bg } })
+        .composite(layers)
+        .png()
+        .toFile(file);
+      console.log(file);
+    }
   }
 }
 
