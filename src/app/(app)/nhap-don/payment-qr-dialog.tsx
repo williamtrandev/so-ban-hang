@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import { QrCode, Copy, Check, CheckCircle2, Landmark, Info, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
   hasBank,
   type PaymentInfo,
 } from "@/lib/domain/payment";
+import { useSetOrderStatus } from "./status-toggle";
 
 function CopyRow({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
@@ -62,6 +64,14 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
   const bankOk = hasBank(pay);
   const bank = bankByBin(pay.bank_bin);
   const isMomo = pay.bank_bin === "971025";
+  const { setStatus, pending } = useSetOrderStatus();
+
+  function markPaid() {
+    setStatus(order.id, "da_thanh_toan", true, () => {
+      toast.success(`${order.ten_nguoi_mua} đã thanh toán.`);
+      setOpen(false);
+    });
+  }
 
   return (
     <>
@@ -170,6 +180,13 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
                 <CopyRow label="Số tiền" value={amount.toLocaleString("vi-VN")} />
               </div>
             </div>
+          )}
+
+          {!paid && (
+            <Button type="button" className="h-11 w-full" disabled={pending} onClick={markPaid}>
+              <CheckCircle2 />
+              Đã nhận tiền
+            </Button>
           )}
         </DialogContent>
       </Dialog>

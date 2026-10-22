@@ -130,10 +130,25 @@ export async function createBulkOrders(
   return null;
 }
 
-export async function deleteOrder(orderId: string): Promise<void> {
+export async function deleteOrder(orderId: string): Promise<string | null> {
   const supabase = await createClient();
-  await supabase.from("orders").delete().eq("id", orderId);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return "Phiên đăng nhập hết hạn, đăng nhập lại.";
+
+  const { data, error } = await supabase
+    .from("orders")
+    .delete()
+    .eq("id", orderId)
+    .eq("seller_id", user.id)
+    .is("settlement_id", null)
+    .select("id");
+  if (error) return error.message;
+  if (!data?.length) return "Đơn không còn hoặc đã được quyết toán.";
+
   revalidatePath("/nhap-don");
+  return null;
 }
 
 // Toggle đã thanh toán / đã giao ngay trên danh sách (chỉ đơn chưa quyết toán).
@@ -141,14 +156,19 @@ export async function toggleOrderStatus(
   orderId: string,
   field: "da_thanh_toan" | "da_giao",
   value: boolean,
-): Promise<void> {
+): Promise<string | null> {
   const supabase = await createClient();
-  await supabase
+  const { data, error } = await supabase
     .from("orders")
     .update({ [field]: value })
     .eq("id", orderId)
-    .is("settlement_id", null);
+    .is("settlement_id", null)
+    .select("id");
+  if (error) return error.message;
+  if (!data?.length) return "Đơn không còn hoặc đã được quyết toán.";
+
   revalidatePath("/nhap-don");
+  return null;
 }
 
 export async function updateOrder(

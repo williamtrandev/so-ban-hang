@@ -23,7 +23,7 @@ function Segment({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "relative flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-all select-none",
+        "relative flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm sm:flex-none font-medium whitespace-nowrap transition-all select-none",
         active
           ? "bg-background text-foreground shadow-sm ring-1 ring-foreground/10"
           : "text-muted-foreground hover:text-foreground",
@@ -49,8 +49,8 @@ export function RoundSwitcher() {
   const nextCount = orders.filter((o) => o.dot === currentRound + 1).length;
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex gap-1 rounded-xl bg-muted p-1">
+    <div className="flex flex-col gap-1.5 sm:items-end">
+      <div className="flex w-full gap-1 rounded-xl bg-muted p-1 sm:w-auto">
         <Segment
           active={!viewNext}
           onClick={() => setViewNext(false)}
@@ -67,7 +67,7 @@ export function RoundSwitcher() {
         />
       </div>
       {viewNext && (
-        <p className="px-1 text-xs text-muted-foreground">
+        <p className="px-1 text-xs text-muted-foreground sm:text-right">
           Đơn nhập vào đây thuộc đợt sau, không bị chốt khi quyết toán đợt hiện tại.
         </p>
       )}

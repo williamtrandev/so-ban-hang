@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { OrderRow, Price, PriceGroup } from "./types";
+import { SOLUONG_LEAVES, zeroSoLuong, type OrderRow, type Price, type PriceGroup, type SoLuong } from "./types";
+import { foldVi } from "@/lib/utils";
 
 export interface SettlementRow {
   id: string;
@@ -68,4 +69,38 @@ export async function getSettlementOrders(
 
   if (error) throw error;
   return data as OrderRow[];
+}
+
+export interface BuyerSuggestion {
+  name: string;
+  count: number;
+  last: SoLuong;
+  ghi_chu: string | null;
+}
+
+// Khách quen để gợi ý khi nhập đơn: gộp theo tên (không dấu), giữ đơn gần nhất
+// làm mẫu "mua như lần trước". Bảng nhỏ nên lấy 2000 đơn mới nhất là đủ.
+export async function getBuyerSuggestions(supabase: SupabaseClient): Promise<BuyerSuggestion[]> {
+  const cols = ["ten_nguoi_mua", "ghi_chu", ...SOLUONG_LEAVES.map((l) => l.key)].join(", ");
+  const { data, error } = await supabase
+    .from("orders")
+    .select(cols)
+    .order("created_at", { ascending: false })
+    .limit(2000);
+
+  if (error) throw error;
+  const map = new Map<string, BuyerSuggestion>();
+  for (const row of data as unknown as (SoLuong & { ten_nguoi_mua: string; ghi_chu: string | null })[]) {
+    const key = foldVi(row.ten_nguoi_mua);
+    if (!key) continue;
+    const hit = map.get(key);
+    if (hit) {
+      hit.count += 1;
+      continue;
+    }
+    const last = zeroSoLuong();
+    for (const l of SOLUONG_LEAVES) last[l.key] = row[l.key];
+    map.set(key, { name: row.ten_nguoi_mua.trim(), count: 1, last, ghi_chu: row.ghi_chu });
+  }
+  return Array.from(map.values()).sort((a, b) => b.count - a.count);
 }

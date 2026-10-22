@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { ReceiptText, Trash2, Pencil, Search, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { ReceiptText, Trash2, Pencil, Search, Repeat2, X } from "lucide-react";
 import { deleteOrder } from "./actions";
 import { OrderForm } from "./order-form";
 import { useOrders, TMP_PREFIX } from "./orders-provider";
+import { quickTextFromOrder } from "./parse";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,75 +39,93 @@ import {
 } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
 
-type StatusFilter = "chua_thanh_toan" | "chua_giao";
+const UNDO_MS = 5000;
 
 function StatusPair({ order }: { order: OrderRow }) {
   return (
     <div className="flex gap-1.5">
-      <StatusToggle
-        orderId={order.id}
-        field="da_thanh_toan"
-        value={order.da_thanh_toan}
-        labelOn="Đã TT"
-        labelOff="Chưa TT"
-      />
-      <StatusToggle
-        orderId={order.id}
-        field="da_giao"
-        value={order.da_giao}
-        labelOn="Đã giao"
-        labelOff="Chưa giao"
-      />
+      <StatusToggle order={order} field="da_thanh_toan" labelOn="Đã TT" labelOff="Chưa TT" />
+      <StatusToggle order={order} field="da_giao" labelOn="Đã giao" labelOff="Chưa giao" />
     </div>
   );
 }
 
-function RowActions({
-  order,
-  currentUserId,
-  onEdit,
-}: {
-  order: OrderRow;
-  currentUserId: string;
-  onEdit: (order: OrderRow) => void;
-}) {
-  const { apply } = useOrders();
-  const [pending, startTransition] = useTransition();
+function RowActions({ order, onEdit }: { order: OrderRow; onEdit: (order: OrderRow) => void }) {
+  const { currentUserId, hide, unhide, setDraft } = useOrders();
 
-  // Đơn tạm (đang lưu) chưa có id thật -> chưa cho sửa/xoá.
-  if (order.seller_id !== currentUserId || order.id.startsWith(TMP_PREFIX)) return null;
+  // Đơn tạm (đang lưu) chưa có id thật -> chưa thao tác được.
+  if (order.id.startsWith(TMP_PREFIX)) return null;
+  const mine = order.seller_id === currentUserId;
 
+  // Ẩn ngay, chỉ xoá thật khi hết thời gian hoàn tác.
   function handleDelete() {
-    startTransition(async () => {
-      apply({ type: "remove", id: order.id });
-      await deleteOrder(order.id);
+    hide(order.id);
+    let settled = false;
+    const commit = () => {
+      if (settled) return;
+      settled = true;
+      deleteOrder(order.id).then((error) => {
+        if (!error) return;
+        unhide(order.id);
+        toast.error(`Chưa xoá được đơn ${order.ten_nguoi_mua}: ${error}`);
+      });
+    };
+    toast(`Đã xoá đơn ${order.ten_nguoi_mua}`, {
+      duration: UNDO_MS,
+      action: {
+        label: "Hoàn tác",
+        onClick: () => {
+          settled = true;
+          unhide(order.id);
+        },
+      },
+      onAutoClose: commit,
+      onDismiss: commit,
     });
   }
 
+  function handleRepeat() {
+    setDraft(quickTextFromOrder(order.ten_nguoi_mua, order, order.ghi_chu));
+  }
+
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-0.5">
+      <PaymentQrButton order={order} />
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="text-muted-foreground hover:text-foreground"
-        aria-label="Sửa đơn"
-        disabled={pending}
-        onClick={() => onEdit(order)}
+        className="text-muted-foreground hover:text-primary"
+        aria-label="Lặp lại đơn"
+        title="Lặp lại đơn này"
+        onClick={handleRepeat}
       >
-        <Pencil />
+        <Repeat2 />
       </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        className="text-muted-foreground hover:text-destructive"
-        aria-label="Xoá đơn"
-        disabled={pending}
-        onClick={handleDelete}
-      >
-        {pending ? <Loader2 className="animate-spin" /> : <Trash2 />}
-      </Button>
+      {mine && (
+        <>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Sửa đơn"
+            onClick={() => onEdit(order)}
+          >
+            <Pencil />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-destructive"
+            aria-label="Xoá đơn"
+            onClick={handleDelete}
+          >
+            <Trash2 />
+          </Button>
+        </>
+      )}
     </div>
   );
 }
@@ -113,10 +133,12 @@ function RowActions({
 function FilterChip({
   active,
   onClick,
+  count,
   children,
 }: {
   active: boolean;
   onClick: () => void;
+  count?: number;
   children: React.ReactNode;
 }) {
   return (
@@ -125,60 +147,49 @@ function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex h-8 shrink-0 items-center rounded-md border px-3 text-xs font-medium whitespace-nowrap transition-all select-none active:scale-[0.97]",
+        "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium whitespace-nowrap transition-all select-none active:scale-[0.97]",
         active
           ? "border-transparent bg-primary text-primary-foreground"
           : "border-border bg-transparent text-muted-foreground hover:border-primary/40 hover:text-foreground",
       )}
     >
       {children}
+      {count !== undefined && (
+        <span className={cn("tabular-nums", active ? "opacity-80" : "opacity-60")}>{count}</span>
+      )}
     </button>
   );
 }
 
 export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Price> }) {
-  const { orders: allOrders, currentUserId, selectedDot, viewNext } = useOrders();
-  // Chỉ đơn thuộc đợt đang xem (hiện tại / kế tiếp).
-  const orders = useMemo(() => allOrders.filter((o) => o.dot === selectedDot), [allOrders, selectedDot]);
-  const [search, setSearch] = useState("");
-  const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(new Set());
-  const [sellerFilter, setSellerFilter] = useState<string | null>(null);
+  const {
+    roundOrders,
+    filteredOrders,
+    currentUserId,
+    viewNext,
+    search,
+    setSearch,
+    statusFilters,
+    toggleStatusFilter,
+    sellerView,
+    setSellerView,
+  } = useOrders();
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
 
-  function toggleFilter(filter: StatusFilter) {
-    setStatusFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(filter)) next.delete(filter);
-      else next.add(filter);
-      return next;
-    });
-  }
-
-  // Người tạo có mặt trong đợt (distinct theo seller_id), mình đứng đầu.
-  const sellers = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const o of orders) {
-      if (!map.has(o.seller_id)) map.set(o.seller_id, o.profiles?.full_name ?? "Không rõ");
+  // Người khác có đơn trong đợt (mình đã có chip "Của tôi" riêng).
+  const others = useMemo(() => {
+    const map = new Map<string, { name: string; count: number }>();
+    for (const o of roundOrders) {
+      if (o.seller_id === currentUserId) continue;
+      const hit = map.get(o.seller_id);
+      if (hit) hit.count += 1;
+      else map.set(o.seller_id, { name: o.profiles?.full_name ?? "Không rõ", count: 1 });
     }
-    return Array.from(map, ([id, name]) => ({ id, name })).sort(
-      (a, b) =>
-        Number(b.id === currentUserId) - Number(a.id === currentUserId) ||
-        a.name.localeCompare(b.name, "vi"),
-    );
-  }, [orders, currentUserId]);
+    return Array.from(map, ([id, v]) => ({ id, ...v })).sort((a, b) => a.name.localeCompare(b.name, "vi"));
+  }, [roundOrders, currentUserId]);
+  const mineCount = roundOrders.length - others.reduce((n, s) => n + s.count, 0);
 
-  const filteredOrders = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return orders.filter((o) => {
-      if (q && !o.ten_nguoi_mua.toLowerCase().includes(q)) return false;
-      if (statusFilters.has("chua_thanh_toan") && o.da_thanh_toan) return false;
-      if (statusFilters.has("chua_giao") && o.da_giao) return false;
-      if (sellerFilter && o.seller_id !== sellerFilter) return false;
-      return true;
-    });
-  }, [orders, search, statusFilters, sellerFilter]);
-
-  if (orders.length === 0) {
+  if (roundOrders.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/40 p-10 text-center">
         <ReceiptText className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
@@ -190,8 +201,12 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
     );
   }
 
-  const totals = calcTotals(orders);
-  const productTotals = calcProductTotals(orders);
+  const totals = calcTotals(filteredOrders);
+  const productTotals = calcProductTotals(filteredOrders);
+  const unpaid = filteredOrders.filter((o) => !o.da_thanh_toan).length;
+  const isFiltered = filteredOrders.length !== roundOrders.length;
+  const scopeLabel =
+    sellerView === "mine" ? "Của tôi" : sellerView === "all" ? "Tất cả" : (others.find((s) => s.id === sellerView)?.name ?? "Đã lọc");
 
   return (
     <div className="flex flex-col gap-3">
@@ -201,45 +216,76 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo tên người mua..."
-            className="pl-8"
+            placeholder="Tìm người mua..."
+            className="pr-8 pl-8"
           />
+          {search && (
+            <button
+              type="button"
+              aria-label="Xoá tìm kiếm"
+              onClick={() => setSearch("")}
+              className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
         </div>
         <div className="flex gap-1.5">
           <FilterChip
             active={statusFilters.has("chua_thanh_toan")}
-            onClick={() => toggleFilter("chua_thanh_toan")}
+            onClick={() => toggleStatusFilter("chua_thanh_toan")}
           >
             Chưa thanh toán
           </FilterChip>
-          <FilterChip
-            active={statusFilters.has("chua_giao")}
-            onClick={() => toggleFilter("chua_giao")}
-          >
+          <FilterChip active={statusFilters.has("chua_giao")} onClick={() => toggleStatusFilter("chua_giao")}>
             Chưa giao
           </FilterChip>
         </div>
       </div>
 
-      {sellers.length > 1 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-          <span className="shrink-0 text-xs text-muted-foreground">Người tạo:</span>
-          {sellers.map((s) => (
+      {others.length > 0 && (
+        <div className="-mx-1 flex items-center gap-1.5 overflow-x-auto px-1 pb-0.5">
+          <FilterChip active={sellerView === "mine"} onClick={() => setSellerView("mine")} count={mineCount}>
+            Của tôi
+          </FilterChip>
+          <FilterChip active={sellerView === "all"} onClick={() => setSellerView("all")} count={roundOrders.length}>
+            Tất cả
+          </FilterChip>
+          <span className="mx-0.5 h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+          {others.map((s) => (
             <FilterChip
               key={s.id}
-              active={sellerFilter === s.id}
-              onClick={() => setSellerFilter((prev) => (prev === s.id ? null : s.id))}
+              active={sellerView === s.id}
+              onClick={() => setSellerView(sellerView === s.id ? "all" : s.id)}
+              count={s.count}
             >
-              {s.id === currentUserId ? `${s.name} (bạn)` : s.name}
+              {s.name}
             </FilterChip>
           ))}
         </div>
       )}
 
       {filteredOrders.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/40 p-8 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-lg bg-muted/40 p-8 text-center">
           <Search className="size-6 text-muted-foreground/60" strokeWidth={1.5} />
-          <p className="text-sm text-muted-foreground">Không tìm thấy đơn nào khớp bộ lọc.</p>
+          <p className="text-sm text-muted-foreground">
+            {sellerView === "mine" && mineCount === 0
+              ? "Bạn chưa có đơn nào trong đợt này."
+              : "Không có đơn nào khớp bộ lọc."}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearch("");
+              setSellerView("all");
+              if (statusFilters.has("chua_thanh_toan")) toggleStatusFilter("chua_thanh_toan");
+              if (statusFilters.has("chua_giao")) toggleStatusFilter("chua_giao");
+            }}
+          >
+            Xem tất cả {roundOrders.length} đơn
+          </Button>
         </div>
       ) : (
         <>
@@ -252,6 +298,7 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
                   key={order.id}
                   className={cn(
                     "flex flex-col gap-2.5 rounded-xl border border-border/70 bg-card p-3 animate-in fade-in slide-in-from-bottom-1 duration-300",
+                    !order.da_thanh_toan && "border-l-[3px] border-l-warning/70",
                     tmp && "animate-pulse opacity-60",
                   )}
                   style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
@@ -268,15 +315,10 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
                     </span>
                   </div>
                   <SoLuongChips q={order} />
-                  {order.ghi_chu && (
-                    <p className="text-xs text-muted-foreground italic">{order.ghi_chu}</p>
-                  )}
+                  {order.ghi_chu && <p className="text-xs text-muted-foreground italic">{order.ghi_chu}</p>}
                   <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-2.5">
                     <StatusPair order={order} />
-                    <div className="flex gap-0.5">
-                      {!tmp && <PaymentQrButton order={order} />}
-                      <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
-                    </div>
+                    <RowActions order={order} onEdit={setEditingOrder} />
                   </div>
                 </li>
               );
@@ -292,7 +334,7 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
                   <TableHead className="h-9 text-xs text-muted-foreground">Số lượng</TableHead>
                   <TableHead className="h-9 text-xs text-muted-foreground">Trạng thái</TableHead>
                   <TableHead className="h-9 text-right text-xs text-muted-foreground">Tiền bán</TableHead>
-                  <TableHead className="h-9 w-24" />
+                  <TableHead className="h-9 w-36" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -307,7 +349,12 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
                       )}
                       style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
                     >
-                      <TableCell className="max-w-64 whitespace-normal">
+                      <TableCell
+                        className={cn(
+                          "max-w-64 whitespace-normal",
+                          !order.da_thanh_toan && "shadow-[inset_3px_0_0_var(--color-warning)]",
+                        )}
+                      >
                         <div className="font-medium">{order.ten_nguoi_mua}</div>
                         <div className="text-xs text-muted-foreground tabular-nums">
                           {order.profiles?.full_name ?? "—"} · {formatDateTime(order.created_at)}
@@ -326,9 +373,8 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
                         {formatVnd(orderTienBan(order))}
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-0.5">
-                          {!tmp && <PaymentQrButton order={order} />}
-                          <RowActions order={order} currentUserId={currentUserId} onEdit={setEditingOrder} />
+                        <div className="flex justify-end">
+                          <RowActions order={order} onEdit={setEditingOrder} />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -343,10 +389,27 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
       <div className="flex flex-col gap-2 border-t border-border/60 pt-3 text-sm sm:flex-row sm:items-center sm:justify-between">
         <SoLuongChips q={productTotals} />
         <p className="shrink-0 text-muted-foreground sm:text-right">
-          Tổng {totals.soLuongTong} phần · dự kiến bán{" "}
+          {isFiltered && <span className="font-medium text-foreground">{scopeLabel}: </span>}
+          {totals.soLuongTong} phần · dự kiến bán{" "}
           <span className="font-medium text-foreground tabular-nums">{formatVnd(totals.tienBan)}</span>
         </p>
       </div>
+
+      {/* Mobile: tổng luôn thấy, khỏi cuộn xuống cuối danh sách. */}
+      {filteredOrders.length > 0 && (
+        <div className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 flex items-center justify-between gap-3 rounded-2xl border border-foreground/10 bg-background/85 px-4 py-2.5 shadow-[0_12px_32px_-12px_color-mix(in_oklch,var(--foreground)_35%,transparent)] backdrop-blur-xl md:hidden">
+          <div className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate text-[11px] text-muted-foreground">
+              {scopeLabel} · {filteredOrders.length} đơn
+              {unpaid > 0 && <span className="text-warning"> · {unpaid} chưa TT</span>}
+            </span>
+            <span className="text-xs text-muted-foreground tabular-nums">{totals.soLuongTong} phần</span>
+          </div>
+          <span className="shrink-0 text-lg font-semibold text-primary tabular-nums">
+            {formatVnd(totals.tienBan)}
+          </span>
+        </div>
+      )}
 
       <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
         <DialogContent className="sm:max-w-2xl">

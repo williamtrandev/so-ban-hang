@@ -168,3 +168,12 @@ export function toggleQuickStatus(text: string, kind: "paid" | "delivered"): str
   if (kept.length === tokens.length) kept.push(kind === "paid" ? "tt" : "giao");
   return joinQuick(name, kept);
 }
+
+// Dựng lại dòng nhập nhanh từ 1 đơn có sẵn (khách quen / lặp lại đơn).
+export function quickTextFromOrder(name: string, q: SoLuong, note?: string | null): string {
+  const tokens = (Object.keys(QTY_FIELD) as QtyCode[])
+    .filter((code) => q[QTY_FIELD[code]] > 0)
+    .map((code) => `${q[QTY_FIELD[code]]}${code}`);
+  if (note?.trim()) tokens.push(note.trim());
+  return joinQuick(name.trim(), tokens);
+}

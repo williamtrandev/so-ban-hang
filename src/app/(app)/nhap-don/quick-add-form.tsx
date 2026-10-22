@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState, useRef, useEffect, useState, useMemo } from "react";
-import { Zap, Minus, Check, X } from "lucide-react";
+import { Zap, Minus, Check, X, History } from "lucide-react";
 import { createBulkOrders } from "./actions";
 import {
   parseBulkOrders,
   quickTokenState,
   bumpQuickQty,
   toggleQuickStatus,
+  quickTextFromOrder,
   type QtyCode,
 } from "./parse";
 import { useOrders, toOptimisticOrder } from "./orders-provider";
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SoLuongChips } from "@/components/soluong-chips";
 import { formatVnd, tienBanTheoGia, type Price, type PriceGroup } from "@/lib/domain/types";
-import { cn } from "@/lib/utils";
+import { cn, foldVi } from "@/lib/utils";
 
 const PRODUCTS: { label: string; variants: { code: QtyCode; label: string }[] }[] = [
   { label: "Nem ăn liền", variants: [{ code: "nl", label: "Lá" }, { code: "nh", label: "Hộp" }] },
@@ -27,7 +28,7 @@ const PRODUCTS: { label: string; variants: { code: QtyCode; label: string }[] }[
 ];
 
 export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) {
-  const { apply, currentUserId, selectedDot, viewNext } = useOrders();
+  const { apply, currentUserId, selectedDot, viewNext, draft, setDraft, suggestions } = useOrders();
   const [error, formAction, pending] = useActionState(
     async (prev: string | null, formData: FormData) => {
       // Dispatch optimistic TRONG transition đang await server -> đơn giữ hiện tới khi xong.
@@ -47,13 +48,65 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
   const inputRef = useRef<HTMLInputElement>(null);
   const submittedRef = useRef(false);
   const pointerTypeRef = useRef<string>("mouse");
-
   const result = useMemo(() => parseBulkOrders(text)[0], [text]);
   const tokens = useMemo(() => quickTokenState(text), [text]);
   const tongTien = useMemo(
     () => (result?.ok ? tienBanTheoGia(result.order, prices) : 0),
     [result, prices],
   );
+
+  const [focused, setFocused] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const [active, setActive] = useState(-1);
+
+  // Đang gõ tên (chưa có dấu phẩy) thì gợi ý khách quen khớp tên, không dấu.
+  const matches = useMemo(() => {
+    if (text.includes(",")) return [];
+    const q = foldVi(text);
+    if (!q) return [];
+    return suggestions
+      .map((s) => ({ s, f: foldVi(s.name) }))
+      .filter(({ f }) => f.includes(q))
+      .sort((a, b) => Number(b.f.startsWith(q)) - Number(a.f.startsWith(q)) || b.s.count - a.s.count)
+      .slice(0, 5)
+      .map(({ s }) => s);
+  }, [text, suggestions]);
+  const showSuggest = focused && !dismissed && matches.length > 0;
+
+  function pick(i: number) {
+    const s = matches[i];
+    if (!s) return;
+    setText(quickTextFromOrder(s.name, s.last));
+    setActive(-1);
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!showSuggest) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const d = e.key === "ArrowDown" ? 1 : -1;
+      setActive((a) => (a + d + matches.length) % matches.length);
+    } else if (e.key === "Enter") {
+      // Chưa có món thì Enter không gửi được, nên chọn luôn gợi ý.
+      if (active >= 0 || !result?.ok) {
+        e.preventDefault();
+        pick(Math.max(active, 0));
+      }
+    } else if (e.key === "Escape") {
+      setDismissed(true);
+    }
+  }
+
+  // "Lặp lại đơn" từ danh sách đổ dòng có sẵn vào đây.
+  useEffect(() => {
+    if (draft === null) return;
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
+    setText(draft);
+    setDraft(null);
+    const el = inputRef.current;
+    el?.focus();
+    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [draft, setDraft]);
 
   useEffect(() => {
     if (pending) {
@@ -100,7 +153,17 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
             name="bulk_text"
             type="text"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              setDismissed(false);
+              setActive(-1);
+            }}
+            onKeyDown={onKeyDown}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            role="combobox"
+            aria-expanded={showSuggest}
+            aria-controls="buyer-suggestions"
             autoComplete="off"
             autoFocus
             enterKeyHint="send"
@@ -119,6 +182,40 @@ export function QuickAddForm({ prices }: { prices: Record<PriceGroup, Price> }) 
             >
               <X className="size-4" />
             </button>
+          )}
+          {showSuggest && (
+            <ul
+              id="buyer-suggestions"
+              role="listbox"
+              className="absolute inset-x-0 top-full z-20 mt-1.5 overflow-hidden rounded-xl border border-border/70 bg-popover p-1 shadow-[0_16px_40px_-16px_color-mix(in_oklch,var(--foreground)_40%,transparent)] animate-in fade-in slide-in-from-top-1 duration-150"
+            >
+              <li className="flex items-center gap-1.5 px-2.5 pt-1 pb-1.5 text-[11px] text-muted-foreground">
+                <History className="size-3" />
+                Khách quen · chọn để điền món lần trước
+              </li>
+              {matches.map((m, i) => (
+                <li key={m.name} role="option" aria-selected={i === active}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => pick(i)}
+                    onMouseEnter={() => setActive(i)}
+                    className={cn(
+                      "flex w-full flex-col gap-1.5 rounded-lg px-2.5 py-2 text-left transition-colors",
+                      i === active ? "bg-muted" : "hover:bg-muted/60",
+                    )}
+                  >
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-medium">{m.name}</span>
+                      <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                        {m.count} đơn
+                      </span>
+                    </span>
+                    <SoLuongChips q={m.last} className="[&>span]:py-0.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
         <Button type="submit" disabled={!canSubmit} className="h-11 px-4">
