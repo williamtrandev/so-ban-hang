@@ -17,23 +17,20 @@ export default function Loading() {
           <Skeleton className="h-[4.75rem] rounded-xl" />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:gap-5 xl:grid-cols-12">
-          <Card className="xl:col-span-7">
+        <div className="grid grid-cols-1 gap-4 md:gap-5 lg:grid-cols-12 lg:items-start">
+          <Card className="lg:col-span-5">
             <CardHeader>
               <Skeleton className="h-5 w-44" />
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                {[0, 1, 2].map((i) => (
-                  <Skeleton key={i} className="h-16 rounded-lg" />
-                ))}
-              </div>
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-36 w-full rounded-lg" />
-              <Skeleton className="h-9 w-40 rounded-lg" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-11 w-full rounded-lg" />
             </CardContent>
           </Card>
-          <Card className="xl:col-span-5">
+          <Card className="lg:col-span-7">
             <CardHeader className="gap-2">
               <Skeleton className="h-5 w-48" />
               <Skeleton className="h-4 w-64 max-w-full" />

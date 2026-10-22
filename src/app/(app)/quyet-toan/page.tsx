@@ -21,7 +21,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { SettlementPanel } from "./settlement-panel";
-import { SellerRevenueList } from "./seller-revenue-list";
+import { SellerTable } from "./seller-table";
 import { ContentReveal } from "@/components/page-transition";
 
 export default async function QuyetToanPage() {
@@ -75,19 +75,17 @@ export default async function QuyetToanPage() {
     },
   ];
 
-  // xl: trang khoá đúng chiều cao viewport (trừ navbar + padding main), list dài
-  // scroll bên trong card thay vì scroll cả trang.
   return (
     <ContentReveal>
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:gap-5 xl:h-[calc(100dvh-7.5rem)]">
-      <header className="flex shrink-0 flex-col gap-1">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:gap-5">
+      <header className="flex flex-col gap-1">
         <h1 className="font-heading text-2xl font-semibold tracking-tight">Quyết toán</h1>
         <p className="text-sm text-muted-foreground">
           Thống kê doanh thu và chốt đợt bán hiện tại.
         </p>
       </header>
 
-      <dl className="grid shrink-0 grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+      <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
         {allTimeStats.map((s) => (
           <div
             key={s.label}
@@ -131,8 +129,8 @@ export default async function QuyetToanPage() {
         ))}
       </dl>
 
-      <div className="grid grid-cols-1 gap-4 md:gap-5 xl:min-h-0 xl:flex-1 xl:grid-cols-12 xl:items-stretch">
-        <Card className="xl:col-span-7 xl:flex xl:min-h-0 xl:flex-col">
+      <div className="grid grid-cols-1 gap-4 md:gap-5 lg:grid-cols-12 lg:items-start">
+        <Card className="lg:col-span-5">
           <CardHeader>
             <CardTitle>Quyết toán đợt hiện tại</CardTitle>
             {nextBatchCount > 0 && (
@@ -141,7 +139,7 @@ export default async function QuyetToanPage() {
               </CardDescription>
             )}
           </CardHeader>
-          <CardContent className="xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
+          <CardContent>
             <SettlementPanel
               totals={totals}
               pendingCount={currentPending.length}
@@ -152,15 +150,9 @@ export default async function QuyetToanPage() {
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-5 xl:flex xl:min-h-0 xl:flex-col">
-          <CardHeader>
-            <CardTitle>Doanh thu theo người bán</CardTitle>
-            <CardDescription>
-              Tiền bán và tiền gốc toàn thời gian, gồm cả đợt đang bán.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
-            <SellerRevenueList rows={allTimeBySeller} />
+        <Card className="lg:col-span-7">
+          <CardContent>
+            <SellerTable current={sellerBreakdown} allTime={allTimeBySeller} />
           </CardContent>
         </Card>
       </div>

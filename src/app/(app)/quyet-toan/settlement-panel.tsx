@@ -3,14 +3,15 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Wallet, ShoppingBag, TrendingUp, CheckCircle2, PartyPopper, Users } from "lucide-react";
+import { Wallet, ShoppingBag, TrendingUp, CheckCircle2, PartyPopper } from "lucide-react";
 import { closeSettlement } from "./actions";
 import { PriceChangeModal } from "./price-change-modal";
 import { ConfirmSettleDialog } from "./confirm-settle-dialog";
-import { SellerBreakdownTable } from "./seller-breakdown-table";
+import { SoLuongChips } from "@/components/soluong-chips";
 import { Button } from "@/components/ui/button";
 import { AnimatedNumber } from "@/components/animated-number";
 import {
+  calcProductTotals,
   formatVnd,
   type SettlementTotals,
   type Price,
@@ -63,50 +64,47 @@ export function SettlementPanel({
     );
   }
 
+  const rows = [
+    { icon: Wallet, label: "Tiền gốc", value: totals.tienGoc, accent: false },
+    { icon: ShoppingBag, label: "Tiền bán", value: totals.tienBan, accent: false },
+    { icon: TrendingUp, label: "Tiền lời", value: totals.tienLoi, accent: true },
+  ];
+
   return (
-    <div className="flex flex-col gap-4 xl:min-h-0 xl:flex-1">
-      <dl className="grid shrink-0 grid-cols-3 gap-2 sm:gap-3">
-        <div className="flex flex-col gap-1.5 rounded-lg bg-muted/50 p-3">
-          <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Wallet className="size-3.5 max-sm:hidden" strokeWidth={1.75} />
-            Tiền gốc
-          </dt>
-          <dd className="text-sm font-semibold tabular-nums sm:text-xl">
-            <AnimatedNumber value={totals.tienGoc} formatter={formatVnd} />
-          </dd>
-        </div>
-        <div className="flex flex-col gap-1.5 rounded-lg bg-muted/50 p-3">
-          <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <ShoppingBag className="size-3.5 max-sm:hidden" strokeWidth={1.75} />
-            Tiền bán
-          </dt>
-          <dd className="text-sm font-semibold tabular-nums sm:text-xl">
-            <AnimatedNumber value={totals.tienBan} formatter={formatVnd} />
-          </dd>
-        </div>
-        <div className="flex flex-col gap-1.5 rounded-lg bg-primary/10 p-3 ring-1 ring-primary/20">
-          <dt className="flex items-center gap-1.5 text-xs font-medium text-primary">
-            <TrendingUp className="size-3.5 max-sm:hidden" strokeWidth={1.75} />
-            Tiền lời
-          </dt>
-          <dd className="text-sm font-semibold tabular-nums text-primary sm:text-xl">
-            <AnimatedNumber value={totals.tienLoi} formatter={formatVnd} />
-          </dd>
-        </div>
+    <div className="flex flex-col gap-4">
+      <dl className="flex flex-col gap-1">
+        {rows.map((r) => (
+          <div
+            key={r.label}
+            className={
+              r.accent
+                ? "mt-1 flex items-center justify-between gap-3 rounded-xl bg-primary/10 px-3.5 py-3 ring-1 ring-primary/20"
+                : "flex items-center justify-between gap-3 px-3.5 py-1.5"
+            }
+          >
+            <dt
+              className={`flex items-center gap-2 text-sm ${r.accent ? "font-medium text-primary" : "text-muted-foreground"}`}
+            >
+              <r.icon className="size-4" strokeWidth={1.75} />
+              {r.label}
+            </dt>
+            <dd
+              className={`font-semibold tabular-nums ${r.accent ? "text-xl text-primary" : "text-base"}`}
+            >
+              <AnimatedNumber value={r.value} formatter={formatVnd} />
+            </dd>
+          </div>
+        ))}
       </dl>
 
-      <div className="flex flex-col gap-2 xl:min-h-0 xl:flex-1">
-        <h3 className="flex shrink-0 items-center gap-1.5 text-sm font-medium">
-          <Users className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
-          Theo người bán
-          <span className="text-xs font-normal text-muted-foreground">({sellerBreakdown.length})</span>
-        </h3>
-        <div className="max-h-56 overflow-y-auto rounded-lg border border-border/60 xl:max-h-none xl:min-h-0 xl:flex-1">
-          <SellerBreakdownTable rows={sellerBreakdown} />
-        </div>
+      <div className="flex flex-col gap-2 border-t border-border/60 pt-3">
+        <span className="text-xs text-muted-foreground">
+          {pendingCount} đơn · {totals.soLuongTong} phần
+        </span>
+        <SoLuongChips q={calcProductTotals(sellerBreakdown)} />
       </div>
 
-      <Button type="button" onClick={() => setConfirmOpen(true)} className="w-full shrink-0 sm:w-auto">
+      <Button type="button" onClick={() => setConfirmOpen(true)} className="h-11 w-full text-base">
         <CheckCircle2 />
         Quyết toán {pendingCount} đơn
       </Button>
