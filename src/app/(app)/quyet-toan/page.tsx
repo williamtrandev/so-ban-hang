@@ -1,5 +1,6 @@
 import { Banknote, TrendingUp, History } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/auth";
 import {
   getCurrentPrices,
   getPendingOrders,
@@ -25,17 +26,8 @@ import { ContentReveal } from "@/components/page-transition";
 
 export default async function QuyetToanPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user!.id)
-    .single();
-
-  const [prices, pendingOrders, history, allOrders] = await Promise.all([
+  const [profile, prices, pendingOrders, history, allOrders] = await Promise.all([
+    getProfile(),
     getCurrentPrices(supabase),
     getPendingOrders(supabase),
     getSettlementHistory(supabase),

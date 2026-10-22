@@ -1,21 +1,12 @@
 import { redirect } from "next/navigation";
 import { Landmark } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/auth";
 import { PaymentSettingsForm, type PaymentSettings } from "./payment-settings-form";
 import { ContentReveal } from "@/components/page-transition";
 
 export default async function CaiDatPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/dang-nhap");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("bank_bin, bank_account, bank_account_name")
-    .eq("id", user.id)
-    .single();
+  const profile = await getProfile();
+  if (!profile) redirect("/dang-nhap");
 
   return (
     <ContentReveal>

@@ -2,39 +2,37 @@
 // Splash hiển thị tức thì khi mở app (fallback của Suspense ở root layout),
 // trong lúc (app)/layout còn chờ auth + profile phía server.
 // Markup tĩnh thuần server: stream ngay trong HTML đầu tiên, không cần JS.
+// Khớp từng pixel với ảnh khởi động iOS (scripts/generate-splash.mjs): nền
+// #0a0a0a, icon 24% cạnh ngắn ở chính giữa, viền mờ -> chuyển từ ảnh native
+// sang HTML không bị nháy hay nhảy vị trí.
 export function SplashScreen() {
   return (
     <div
       aria-label="Đang mở ứng dụng"
       role="status"
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-background"
+      className="fixed inset-0 z-50 bg-[#0a0a0a] text-white"
     >
-      <div className="animate-in fade-in zoom-in-90 duration-500 motion-reduce:animate-none">
-        <img
-          src="/icons/icon-192.png"
-          alt=""
-          width={72}
-          height={72}
-          className="size-18 rounded-2xl shadow-[0_12px_32px_-12px_color-mix(in_oklch,var(--primary)_55%,transparent)]"
+      <div className="absolute top-1/2 left-1/2 size-[24vmin] -translate-x-1/2 -translate-y-1/2">
+        <img src="/icons/icon-512.png" alt="" className="size-full rounded-[22%]" />
+        <span
+          aria-hidden
+          className="absolute -inset-[1.5px] rounded-[calc(24vmin*0.22+1.5px)] border border-white/12"
         />
       </div>
 
-      <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-bottom-1 duration-500 [animation-delay:120ms] [animation-fill-mode:backwards] motion-reduce:animate-none">
-        <p className="font-heading text-lg font-semibold tracking-tight">Sổ bán hàng</p>
-        <p className="text-xs text-muted-foreground">Nem, bì, chả lụa</p>
-      </div>
-
-      <div
-        className="flex items-center gap-1.5 motion-reduce:hidden"
-        style={{ animationDelay: "200ms" }}
-      >
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="size-1.5 animate-bounce rounded-full bg-primary"
-            style={{ animationDelay: `${i * 140}ms` }}
-          />
-        ))}
+      <div className="absolute inset-x-0 top-[calc(50%+12vmin+2rem)] flex flex-col items-center gap-3">
+        <div className="flex items-center gap-1.5 animate-in fade-in duration-300 [animation-delay:400ms] [animation-fill-mode:backwards] motion-reduce:hidden">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="size-1.5 animate-bounce rounded-full bg-white/70"
+              style={{ animationDelay: `${i * 140}ms` }}
+            />
+          ))}
+        </div>
+        <p className="px-6 text-center text-xs text-white/55 animate-in fade-in duration-500 [animation-delay:4s] [animation-fill-mode:backwards]">
+          Mạng hơi chậm, chờ chút nhé…
+        </p>
       </div>
       <p className="sr-only">Đang tải dữ liệu...</p>
     </div>

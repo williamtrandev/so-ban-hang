@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/auth";
 import { UserList, type UserRow } from "./user-list";
 import { ContentReveal } from "@/components/page-transition";
 
@@ -10,20 +11,13 @@ const STATUS_ORDER: Record<UserRow["status"], number> = {
 };
 
 export default async function NguoiDungPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/dang-nhap");
-
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const me = await getProfile();
+  if (!me) redirect("/dang-nhap");
 
   // Chỉ admin mới xem được trang quản lý người dùng.
-  if (me?.role !== "admin") redirect("/nhap-don");
+  if (me.role !== "admin") redirect("/nhap-don");
+
+  const supabase = await createClient();
 
   const { data } = await supabase
     .from("profiles")
@@ -48,7 +42,7 @@ export default async function NguoiDungPage() {
         </p>
       </header>
 
-      <UserList users={users} currentUserId={user.id} />
+      <UserList users={users} currentUserId={me.id} />
     </div>
     </ContentReveal>
   );

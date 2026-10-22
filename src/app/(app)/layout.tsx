@@ -1,21 +1,13 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getProfile, getSessionUser } from "@/lib/auth";
 import { NavBar } from "@/components/nav-bar";
 import { PageTransition } from "@/components/page-transition";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getSessionUser();
   if (!user) redirect("/dang-nhap");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, status")
-    .eq("id", user.id)
-    .single();
+  const profile = await getProfile();
 
   // Chưa được admin duyệt thì chưa cho vào hệ thống.
   if (profile?.status !== "approved") redirect("/cho-duyet");

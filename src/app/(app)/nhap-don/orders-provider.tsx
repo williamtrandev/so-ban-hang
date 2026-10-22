@@ -20,6 +20,7 @@ import {
 import type { BuyerSuggestion } from "@/lib/domain/data";
 import { foldVi } from "@/lib/utils";
 import type { ParsedOrder } from "./parse";
+import { loadBuyerSuggestions } from "./actions";
 
 export const TMP_PREFIX = "tmp-";
 
@@ -98,12 +99,10 @@ export function toOptimisticOrder(
 export function OrdersProvider({
   orders,
   currentUserId,
-  suggestions,
   children,
 }: {
   orders: OrderRow[];
   currentUserId: string;
-  suggestions: BuyerSuggestion[];
   children: ReactNode;
 }) {
   const [optimisticOrders, apply] = useOptimistic(orders, (state, action: OptimisticAction) => {
@@ -118,6 +117,17 @@ export function OrdersProvider({
   const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(new Set());
   const [sellerView, setSellerView] = useState<SellerView>("mine");
   const [filtersLoaded, setFiltersLoaded] = useState(false);
+  const [suggestions, setSuggestions] = useState<BuyerSuggestion[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    loadBuyerSuggestions()
+      .then((s) => alive && setSuggestions(s))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // localStorage chỉ đọc được sau khi mount (SSR không có), nên nạp trong effect.
   useEffect(() => {

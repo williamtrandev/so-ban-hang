@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentPrices } from "@/lib/domain/data";
+import { getBuyerSuggestions, getCurrentPrices, type BuyerSuggestion } from "@/lib/domain/data";
 import {
   SOLUONG_LEAVES,
   priceSnapshot,
@@ -210,4 +210,10 @@ export async function updateOrder(
 
   revalidatePath("/nhap-don");
   return null;
+}
+
+// Gợi ý khách quen tải sau khi trang đã hiện, không chặn lần render đầu.
+export async function loadBuyerSuggestions(): Promise<BuyerSuggestion[]> {
+  const supabase = await createClient();
+  return getBuyerSuggestions(supabase);
 }
