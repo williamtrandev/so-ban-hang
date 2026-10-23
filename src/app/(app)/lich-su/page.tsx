@@ -5,6 +5,7 @@ import { SellerTable } from "../quyet-toan/seller-table";
 import { getSessionUser } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { HistorySummary } from "./history-summary";
+import { RevenueChart } from "./revenue-chart";
 import { SettlementHistory } from "./settlement-history";
 import { ContentReveal } from "@/components/page-transition";
 
@@ -31,6 +32,14 @@ export default async function LichSuPage() {
       </header>
 
       {history.length > 0 && <HistorySummary settlements={history} />}
+
+      {history.length >= 2 && (
+        <Card>
+          <CardContent>
+            <RevenueChart settlements={history} />
+          </CardContent>
+        </Card>
+      )}
 
       {allTimeSellers.length > 0 && (
         <Card>
