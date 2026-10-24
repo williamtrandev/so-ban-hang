@@ -33,6 +33,7 @@ import {
   calcTotals,
   calcProductTotals,
   orderTienBan,
+  orderTienGoc,
   soLuongText,
   type OrderRow,
   type Price,
@@ -80,7 +81,7 @@ function CopyTotalsButton({ orders }: { orders: OrderRow[] }) {
   function copy() {
     const text = soLuongText(
       calcProductTotals(orders),
-      orders.reduce((sum, o) => sum + orderTienBan(o), 0),
+      orders.reduce((sum, o) => sum + orderTienGoc(o), 0),
     );
     navigator.clipboard
       .writeText(text)

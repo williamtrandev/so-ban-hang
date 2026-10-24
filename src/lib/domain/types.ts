@@ -230,8 +230,8 @@ export function buildSellerBreakdown(orders: OrderRow[]): SellerBreakdownRow[] {
 //   - Nem ăn liền: 2 lá
 //   - Nem mới: 1 lá, 3 hộp
 //   - Bì: 3 lá
-//   Tổng: 225k
-export function soLuongText(q: SoLuong, tienBan: number): string {
+//   Tổng: 225k   (tiền gốc)
+export function soLuongText(q: SoLuong, tienGoc: number): string {
   const nhom: [string, [string, number][]][] = [
     ["Nem ăn liền", [["lá", q.so_luong_nem_an_lien_la], ["hộp", q.so_luong_nem_an_lien_hop]]],
     ["Nem mới", [["lá", q.so_luong_nem_moi_la], ["hộp", q.so_luong_nem_moi_hop]]],
@@ -246,6 +246,6 @@ export function soLuongText(q: SoLuong, tienBan: number): string {
       return co.length ? `- ${ten}: ${co.join(", ")}` : null;
     })
     .filter(Boolean);
-  const tong = `${(tienBan / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}k`;
+  const tong = `${(tienGoc / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}k`;
   return [...lines, `Tổng: ${tong}`].join("\n");
 }
