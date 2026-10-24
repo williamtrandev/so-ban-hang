@@ -2,7 +2,7 @@
 
 import { Fragment, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ReceiptText, Trash2, Pencil, Search, Repeat2, X } from "lucide-react";
+import { ReceiptText, Trash2, Pencil, Search, Repeat2, X, Copy, Check } from "lucide-react";
 import { deleteOrder } from "./actions";
 import { OrderForm } from "./order-form";
 import { useOrders, TMP_PREFIX } from "./orders-provider";
@@ -33,6 +33,7 @@ import {
   calcTotals,
   calcProductTotals,
   orderTienBan,
+  soLuongText,
   type OrderRow,
   type Price,
   type PriceGroup,
@@ -69,6 +70,43 @@ function groupByDay(orders: OrderRow[]) {
     g.orders.push(o);
   }
   return groups;
+}
+
+// Copy tổng món của danh sách đang xem (theo bộ lọc) để gửi tin nhắn.
+function CopyTotalsButton({ orders }: { orders: OrderRow[] }) {
+  const [copied, setCopied] = useState(false);
+  const disabled = orders.length === 0;
+
+  function copy() {
+    const text = soLuongText(
+      calcProductTotals(orders),
+      orders.reduce((sum, o) => sum + orderTienBan(o), 0),
+    );
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        setCopied(true);
+        toast.success(`Đã copy số lượng ${orders.length} đơn`, {
+          description: <span className="whitespace-pre-line">{text}</span>,
+        });
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => toast.error("Không copy được, thử lại."));
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={copy}
+      disabled={disabled}
+      title="Copy tổng số lượng các đơn đang hiển thị"
+      className="h-8 shrink-0 rounded-full px-3 text-xs"
+    >
+      {copied ? <Check className="text-primary" /> : <Copy />}
+      Copy số lượng
+    </Button>
+  );
 }
 
 function StatusPair({ order }: { order: OrderRow }) {
@@ -295,7 +333,7 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
             </button>
           )}
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           <FilterChip
             active={statusFilters.has("chua_thanh_toan")}
             onClick={() => toggleStatusFilter("chua_thanh_toan")}
@@ -305,6 +343,7 @@ export function PendingOrdersTable({ prices }: { prices: Record<PriceGroup, Pric
           <FilterChip active={statusFilters.has("chua_giao")} onClick={() => toggleStatusFilter("chua_giao")}>
             Chưa giao
           </FilterChip>
+          <CopyTotalsButton orders={filteredOrders} />
         </div>
       </div>
 

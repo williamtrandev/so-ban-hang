@@ -225,3 +225,27 @@ export function buildSellerBreakdown(orders: OrderRow[]): SellerBreakdownRow[] {
   }
   return Array.from(map.values()).sort((a, b) => b.tienBan - a.tienBan);
 }
+
+// Đoạn chữ để copy/gửi tin nhắn, chỉ liệt kê loại có số lượng:
+//   - Nem ăn liền: 2 lá
+//   - Nem mới: 1 lá, 3 hộp
+//   - Bì: 3 lá
+//   Tổng: 225k
+export function soLuongText(q: SoLuong, tienBan: number): string {
+  const nhom: [string, [string, number][]][] = [
+    ["Nem ăn liền", [["lá", q.so_luong_nem_an_lien_la], ["hộp", q.so_luong_nem_an_lien_hop]]],
+    ["Nem mới", [["lá", q.so_luong_nem_moi_la], ["hộp", q.so_luong_nem_moi_hop]]],
+    ["Bì", [["lá", q.so_luong_bi_la], ["hộp", q.so_luong_bi_hop]]],
+    ["Chả", [["", q.so_luong_cha]]],
+    ["Chuối chiên", [["", q.so_luong_chuoi_chien]]],
+    ["Khoai lang chiên", [["", q.so_luong_khoai_lang_chien]]],
+  ];
+  const lines = nhom
+    .map(([ten, parts]) => {
+      const co = parts.filter(([, n]) => n > 0).map(([dv, n]) => (dv ? `${n} ${dv}` : String(n)));
+      return co.length ? `- ${ten}: ${co.join(", ")}` : null;
+    })
+    .filter(Boolean);
+  const tong = `${(tienBan / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}k`;
+  return [...lines, `Tổng: ${tong}`].join("\n");
+}
