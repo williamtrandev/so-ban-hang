@@ -63,7 +63,8 @@ type OrdersContextValue = {
 
 const OrdersContext = createContext<OrdersContextValue | null>(null);
 
-const FILTER_KEY = "nhap-don:filters";
+// v2: mặc định đổi sang "Tất cả"; bỏ lựa chọn "Của tôi" đã tự lưu ở bản cũ.
+const FILTER_KEY = "nhap-don:filters:v2";
 
 // Dựng 1 OrderRow tạm để hiện ngay khi user vừa thêm, trước khi server trả về.
 export function toOptimisticOrder(
@@ -115,7 +116,7 @@ export function OrdersProvider({
   const [draft, setDraft] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(new Set());
-  const [sellerView, setSellerView] = useState<SellerView>("mine");
+  const [sellerView, setSellerView] = useState<SellerView>("all");
   const [filtersLoaded, setFiltersLoaded] = useState(false);
   const [suggestions, setSuggestions] = useState<BuyerSuggestion[]>([]);
 
