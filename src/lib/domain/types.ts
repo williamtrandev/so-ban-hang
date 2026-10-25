@@ -231,7 +231,8 @@ export function buildSellerBreakdown(orders: OrderRow[]): SellerBreakdownRow[] {
 //   - Nem mới: 1 lá, 3 hộp
 //   - Bì: 3 lá
 //   Tổng: 225k   (tiền gốc)
-export function soLuongText(q: SoLuong, tienGoc: number): string {
+// Các dòng món, chỉ loại có số lượng: ["- Nem ăn liền: 2 lá", "- Nem mới: 1 lá, 3 hộp"].
+export function soLuongLines(q: SoLuong): string[] {
   const nhom: [string, [string, number][]][] = [
     ["Nem ăn liền", [["lá", q.so_luong_nem_an_lien_la], ["hộp", q.so_luong_nem_an_lien_hop]]],
     ["Nem mới", [["lá", q.so_luong_nem_moi_la], ["hộp", q.so_luong_nem_moi_hop]]],
@@ -240,12 +241,13 @@ export function soLuongText(q: SoLuong, tienGoc: number): string {
     ["Chuối chiên", [["", q.so_luong_chuoi_chien]]],
     ["Khoai lang chiên", [["", q.so_luong_khoai_lang_chien]]],
   ];
-  const lines = nhom
-    .map(([ten, parts]) => {
-      const co = parts.filter(([, n]) => n > 0).map(([dv, n]) => (dv ? `${n} ${dv}` : String(n)));
-      return co.length ? `- ${ten}: ${co.join(", ")}` : null;
-    })
-    .filter(Boolean);
+  return nhom.flatMap(([ten, parts]) => {
+    const co = parts.filter(([, n]) => n > 0).map(([dv, n]) => (dv ? `${n} ${dv}` : String(n)));
+    return co.length ? [`- ${ten}: ${co.join(", ")}`] : [];
+  });
+}
+
+export function soLuongText(q: SoLuong, tienGoc: number): string {
   const tong = `${(tienGoc / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}k`;
-  return [...lines, `Tổng: ${tong}`].join("\n");
+  return [...soLuongLines(q), `Tổng: ${tong}`].join("\n");
 }

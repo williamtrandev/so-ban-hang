@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode, Copy, Check, CheckCircle2, Landmark, Info, ScanLine } from "lucide-react";
+import { QrCode, Copy, Check, CheckCircle2, Landmark, Info, ScanLine, Send, ClipboardCopy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatVnd, orderTienBan, type OrderRow } from "@/lib/domain/types";
+import { formatVnd, orderTienBan, soLuongLines, type OrderRow } from "@/lib/domain/types";
 import {
   bankByBin,
   bankInitials,
@@ -21,6 +21,7 @@ import {
   type PaymentInfo,
 } from "@/lib/domain/payment";
 import { useSetOrderStatus } from "./status-toggle";
+import { paymentImage, paymentText, type PaymentShareInfo } from "./payment-share";
 
 function CopyRow({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
@@ -65,6 +66,71 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
   const bank = bankByBin(pay.bank_bin);
   const isMomo = pay.bank_bin === "971025";
   const { setStatus, pending } = useSetOrderStatus();
+  const qrRef = useRef<HTMLDivElement>(null);
+  const [image, setImage] = useState<Blob | null>(null);
+  const [copiedText, setCopiedText] = useState(false);
+
+  const share: PaymentShareInfo | null = bankOk
+    ? {
+        buyer: order.ten_nguoi_mua,
+        amount,
+        bankName: bank?.short ?? "Ngân hàng",
+        accountLabel: isMomo ? "SĐT MoMo" : "Số tài khoản",
+        account: pay.bank_account!,
+        accountName: pay.bank_account_name,
+        items: soLuongLines(order),
+      }
+    : null;
+  const shareKey = share ? JSON.stringify(share) : "";
+
+  // Dựng ảnh sẵn khi mở hộp: Safari chỉ cho mở bảng chia sẻ ngay sau cú bấm, không đợi được.
+  useEffect(() => {
+    if (!open || !share) return;
+    let alive = true;
+    const t = setTimeout(() => {
+      const svg = qrRef.current?.querySelector("svg");
+      if (!svg) return;
+      paymentImage(svg, share)
+        .then((b) => alive && setImage(b))
+        .catch(() => {});
+    }, 50);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, shareKey]);
+
+  async function sendImage() {
+    if (!image || !share) return;
+    const file = new File([image], `thanh-toan-${order.ten_nguoi_mua}.png`, { type: "image/png" });
+    const touch = window.matchMedia("(pointer: coarse)").matches;
+    try {
+      if (touch && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], text: paymentText(share) });
+        return;
+      }
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": image })]);
+      toast.success("Đã copy ảnh mã thanh toán", {
+        description: "Dán vào Zalo hoặc Messenger để gửi cho khách.",
+      });
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      await copyText();
+    }
+  }
+
+  async function copyText() {
+    if (!share) return;
+    try {
+      await navigator.clipboard.writeText(paymentText(share));
+      setCopiedText(true);
+      setTimeout(() => setCopiedText(false), 1500);
+      toast.success("Đã copy thông tin thanh toán");
+    } catch {
+      toast.error("Không copy được, thử lại.");
+    }
+  }
 
   function markPaid() {
     setStatus(order.id, "da_thanh_toan", true, () => {
@@ -129,7 +195,7 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
                   </span>
                 </div>
 
-                <div className="flex justify-center rounded-xl bg-white p-4">
+                <div ref={qrRef} className="flex justify-center rounded-xl bg-white p-4">
                   <QRCodeSVG
                     value={buildVietQr({
                       bin: pay.bank_bin!,
@@ -178,6 +244,16 @@ export function PaymentQrButton({ order }: { order: OrderRow }) {
                   value={pay.bank_account!}
                 />
                 <CopyRow label="Số tiền" value={amount.toLocaleString("vi-VN")} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" variant="outline" className="h-10" disabled={!image} onClick={sendImage}>
+                  {image ? <Send /> : <Loader2 className="animate-spin" />}
+                  Gửi mã cho khách
+                </Button>
+                <Button type="button" variant="outline" className="h-10" onClick={copyText}>
+                  {copiedText ? <Check className="text-primary" /> : <ClipboardCopy />}
+                  Copy thông tin
+                </Button>
               </div>
             </div>
           )}
