@@ -72,6 +72,10 @@
   --warning: oklch(0.62 0.15 60);
   /* Biểu đồ doanh thu: 2 sắc độ cùng hue, đã chạy validate_palette (dataviz). */
   --chart-cost: #65c18b;
+  /* ascii-reveal (skeleton + hiệu ứng giải mã) */
+  --ascii-skeleton: var(--muted-foreground);
+  --ascii-accent: var(--primary);
+  --ascii-font: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
   --chart-profit: #007842;
   --border: oklch(0.905 0.008 155);
   --input: oklch(0.885 0.01 155);
@@ -234,4 +238,10 @@
     animation-duration: 0s !important;
     animation-delay: 0s !important;
   }
+}
+
+/* ascii-reveal skeleton: lớp ký tự nền đậm hơn mặc định cho dễ thấy trên card. */
+.ars.ars-dither {
+  --ars-base: 0.4;
+  --ars-wave: 0.9;
 }

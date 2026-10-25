@@ -2,6 +2,7 @@
 
 import { ViewTransition } from "react";
 import { usePathname } from "next/navigation";
+import { AsciiReveal } from "ascii-reveal";
 
 // Key theo tab: đổi tab thì trang cũ trượt ra, trang mới trượt vào theo hướng
 // tab (nav-forward/nav-back gắn trên Link ở NavBar).
@@ -24,10 +25,12 @@ export function SkeletonTransition({ children }: { children: React.ReactNode }) 
   );
 }
 
+// Nội dung trang "giải mã" vào chỗ qua lưới ký tự khi chuyển trang (ascii-reveal).
+// Lần tải đầu (HTML từ server) hiện ngay, không chạy hiệu ứng để khỏi chậm.
 export function ContentReveal({ children }: { children: React.ReactNode }) {
   return (
-    <ViewTransition enter="vt-reveal" default="none">
+    <AsciiReveal preset="decode" duration="fast">
       {children}
-    </ViewTransition>
+    </AsciiReveal>
   );
 }
